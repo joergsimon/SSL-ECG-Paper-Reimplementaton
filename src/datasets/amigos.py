@@ -65,6 +65,7 @@ def load_ecg_windows(basepath: str):
     windows = []
     window_labels = []
     selfassesment = pd.read_excel(basepath + AmigosConstants.path_to_selfassement, engine='openpyxl')
+    print(selfassesment)
     for idx, file, person_id in iterate_amigos(basepath):
         print(file)
         assesment_pers = selfassesment[selfassesment['UserID'] == person_id]
