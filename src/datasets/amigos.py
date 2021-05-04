@@ -26,11 +26,11 @@ def iterate_amigos(basepath: str):
 
 
 def iterate_data(ecg_d):
-    for idx in range(len(ecg_d) - 4):  # for now skip the last 4 long videos
-        d = ecg_d[idx]
+    for d_idx in range(len(ecg_d) - 4):  # for now skip the last 4 long videos
+        d = ecg_d[d_idx]
         d_ts, d_left_ecg, d_right_ecg, d_accel_x, d_accel_y, d_accel_z = \
             d[:, 0], d[:, 1], d[:, 2], d[:, 3], d[:, 4], d[:, 5]
-        yield d_ts, d_left_ecg, d_right_ecg, d_accel_x, d_accel_y, d_accel_z
+        yield d_idx, d_ts, d_left_ecg, d_right_ecg, d_accel_x, d_accel_y, d_accel_z
 
 
 def load_ecg(file):
@@ -57,7 +57,7 @@ def load_ecg_windows(basepath: str):
 
     def collect_all_ecg_data(ecg_d):
         data = []
-        for _, d_left_ecg, d_right_ecg, _, _, _ in iterate_data(ecg_d):
+        for d_idx, _, d_left_ecg, d_right_ecg, _, _, _ in iterate_data(ecg_d):
             data += [d_left_ecg, d_right_ecg]
         all_ecg = np.concatenate(data)
         return all_ecg
@@ -74,12 +74,12 @@ def load_ecg_windows(basepath: str):
         all_ecg = collect_all_ecg_data(ecg_d)
         data_mean, data_std = du.get_mean_std(all_ecg)
 
-        for _, d_left_ecg, d_right_ecg, _, _, _ in iterate_data(ecg_d):
+        for d_idx, _, d_left_ecg, d_right_ecg, _, _, _ in iterate_data(ecg_d):
             d_left_ecg = du.normalize(d_left_ecg, data_mean, data_std)
             d_right_ecg = du.normalize(d_right_ecg, data_mean, data_std)
 
             w1, w2 = make_windows(d_left_ecg, d_right_ecg)
-            wl = make_labels(idx, assesment_pers, len(w1)+len(w2))
+            wl = make_labels(d_idx, assesment_pers, len(w1)+len(w2))
             windows += w1
             windows += w2
             window_labels += wl
