@@ -128,6 +128,12 @@ class EcgNetwork(nn.Module):
             x = self.emotion_head(embedding)
             return x, embedding
 
+    def _apply(self, fn):
+        self.task_heads = [fn(th) for th in self.task_heads]
+        self.emotion_head = fn(self.emotion_head)
+        self.cnn = fn(self.cnn)
+        return self
+
 
 class AvaragePretextLoss(nn.Module):
     def __init__(self, per_task_criterion, coefficients):
