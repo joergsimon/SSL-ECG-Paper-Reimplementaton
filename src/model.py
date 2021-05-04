@@ -150,6 +150,11 @@ class AvaragePretextLoss(nn.Module):
         ) / (targets.shape[0] * targets.shape[1])
         return total_loss
 
+    def _apply(self, fn):
+        self.per_task_criterion = fn(self.per_task_criterion)
+        self.coefficients = fn(self.coefficients)
+        return self
+
     # def forward(self, tasks_output, labels):
     #     total_loss = sum(
     #         [self.per_task_criterion(o, y) * c for o, y, c in zip(tasks_output, labels, self.coefficients)])
