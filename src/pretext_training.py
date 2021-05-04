@@ -89,6 +89,8 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     optimizer.zero_grad()
                     tasks_out, _ = model(aug_data)
                     lbls = ltv(aug_labels)
+                    if train_on_gpu:
+                        lbls = lbls.cuda()
                     tasks_out = tasks_out.squeeze().T
                     task_loss = criterion(tasks_out, lbls)
                     if total_loss is None:
