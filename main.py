@@ -12,7 +12,7 @@ if __name__ == '__main__':
     #print(len(w), len(wl))
     # w, wl = wesad.load_ecg_windows(data.DataConstants.basepath)
     pt.train_pretext_full_config()
-    #dataset = amigos.ECGAmigosCachedWindowsDataset(data.DataConstants.basepath, None, None, False)
+    #dataset = amigos.ECGAmigosCachedWindowsDataset(data.DataConstants.basepath)
     #print(len(dataset))
     #print(dataset[1])
     #w = data.load_ecg_windows(data.DataSets.AMIGOS, data.DataConstants.basepath)
