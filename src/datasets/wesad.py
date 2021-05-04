@@ -10,14 +10,14 @@ from src.datasets.torch_helper import ECGCachedWindowsDataset
 
 
 class WesadConstants:
-    glob_to_pickled_data: str = "wesad/**/*.pkl"
-    glob_to_data: str = "wesad/**/*.*"
+    glob_to_pickled_data: str = "wesad/WESAD/**/*.pkl"
+    glob_to_data: str = "wesad/WESAD/**/*.*"
     usr_num_regex: str = "S([0-9]+)_\w*.*"
     ecg_file_regex: str = "S[0-9]+_respiban.txt"
     lbls_file_regex: str = "S[0-9]+_quest.csv"
     data_file_key: str = 'data file'
     label_file_key = 'labels file'
-    path_to_cache: str = "/home/jsimon/Documents/HELENA/ssl-ecg/cache/wesad/"
+    path_to_cache: str = "/Users/joergsimon/Documents/phd/HELENA/ssl-ecg/cache/wesad/"
     window_size: int = 2560
 
 
