@@ -39,5 +39,8 @@ def save_windows_to_cache(path_to_cache, windows, window_labels):
 
 
 def cache_is_empty(path_to_cache):
-    is_empty = len(os.listdir(path_to_cache)) == 0
+    path_list = os.listdir(path_to_cache)
+    if '.DS_Store' in path_list: # some macOS specific fix
+        path_list.remove('.DS_Store')
+    is_empty = len(path_list) == 0
     return is_empty
