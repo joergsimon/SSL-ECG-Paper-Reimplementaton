@@ -43,7 +43,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
     #     ds_obj = d.ds_to_constructor[ds_type](d.DataConstants.basepath)
     #     dataset_array.append(ds_obj)
     # dataset = torch.utils.data.ConcatDataset(dataset_array)
-    dataset = d.CombinedECGDatasets([d.DataSets.DREAMER], d.DataConstants.basepath)
+    dataset = d.CombinedECGDatasets(d.ds_to_constructor.keys(), d.DataConstants.basepath)
     # dataset = amigos.ECGAmigosCachedWindowsDataset(d.DataConstants.basepath)
     dataset = d.AugmentationsPretextDataset(dataset, d.AugmentationsPretextDataset.STD_AUG)
 
