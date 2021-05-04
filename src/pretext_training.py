@@ -34,6 +34,7 @@ def train_pretext_full_config():
     train_on_gpu = torch.cuda.is_available()
     if train_on_gpu:
         model = model.cuda()
+        criterion = criterion.cuda()
     train_pretext(model, optimizer, criterion, train_on_gpu, default_params)
 
 
