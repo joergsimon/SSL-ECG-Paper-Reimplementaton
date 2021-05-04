@@ -8,8 +8,8 @@ import src.pretext_training as pt
 run_tests = False
 
 if __name__ == '__main__':
-    #w, wl = dreamer.load_ecg_windows(data.DataConstants.basepath)
-    #print(len(w), len(wl))
+    # w, wl = dreamer.load_ecg_windows(data.DataConstants.basepath)
+    # print(len(w), len(wl))
     # w, wl = wesad.load_ecg_windows(data.DataConstants.basepath)
     pt.train_pretext_full_config()
     #dataset = amigos.ECGAmigosCachedWindowsDataset(data.DataConstants.basepath)
