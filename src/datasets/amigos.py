@@ -92,6 +92,10 @@ class ECGAmigosCachedWindowsDataset(ECGCachedWindowsDataset):
     def __init__(self, basepath: str):
         super(ECGAmigosCachedWindowsDataset, self).__init__(basepath, AmigosConstants.path_to_cache, load_ecg_windows)
 
+    @property
+    def target_size(self):
+        return 10
+
     def get_item(self, idx):
         # else we assume it is a single index so:
         with open(f'{AmigosConstants.path_to_cache}window-{idx}.data.npy', 'rb') as f:

@@ -21,6 +21,10 @@ class ECGCachedWindowsDataset(Dataset):
     def ts_length(self):
         return 2560
 
+    @property
+    def target_size(self):
+        return -1
+
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()

@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import os
+from pathlib import Path
 
 
 def get_max_len(data, window_len):
@@ -29,18 +30,27 @@ def get_mean_std(all_data):
     return data_mean, data_std
 
 
+def save_window_to_cache(path_to_cache, window, window_label, identifier):
+    with open(f'{path_to_cache}window-{identifier}.data.npy', 'wb') as f:
+        np.save(f, window)
+    with open(f'{path_to_cache}window-{identifier}.label.npy', 'wb') as f:
+        pickle.dump(window_label, f)
+
+
 def save_windows_to_cache(path_to_cache, windows, window_labels):
     print(f'saving {len(windows)}  and {len(window_labels)} to cache')
     for i, (w, l) in enumerate(zip(windows, window_labels)):
-        with open(f'{path_to_cache}window-{i}.data.npy', 'wb') as f:
-            np.save(f, w)
-        with open(f'{path_to_cache}window-{i}.label.npy', 'wb') as f:
-            pickle.dump(l, f)
+        save_window_to_cache(path_to_cache, w, l, i)
 
 
 def cache_is_empty(path_to_cache):
+    if not os.path.exists(path_to_cache): return True # non existent paths are empty
     path_list = os.listdir(path_to_cache)
     if '.DS_Store' in path_list: # some macOS specific fix
         path_list.remove('.DS_Store')
     is_empty = len(path_list) == 0
     return is_empty
+
+
+def create_path_if_needed(path):
+    Path(path).mkdir(parents=True, exist_ok=True)

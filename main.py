@@ -4,6 +4,7 @@ import src.datasets.amigos as amigos
 import src.datasets.dreamer as dreamer
 import src.datasets.wesad as wesad
 import src.pretext_training as pt
+import src.finetune_to_target as ftt
 
 run_tests = False
 
@@ -11,7 +12,8 @@ if __name__ == '__main__':
     # w, wl = dreamer.load_ecg_windows(data.DataConstants.basepath)
     # print(len(w), len(wl))
     # w, wl = wesad.load_ecg_windows(data.DataConstants.basepath)
-    pt.train_pretext_full_config()
+    # pt.train_pretext_full_config()
+    ftt.finetune_to_target_full_config(data.DataSets.AMIGOS, 'test_123')
     #dataset = amigos.ECGAmigosCachedWindowsDataset(data.DataConstants.basepath)
     #print(len(dataset))
     #print(dataset[1])
