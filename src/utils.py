@@ -27,3 +27,11 @@ def shuffle_lists(*lists):
     l = list(zip(*lists))
     random.shuffle(l)
     return zip(*l)
+
+
+def assign(lt, ls):
+    if lt is None:
+        lt = ls
+    else:
+        lt += ls
+    return lt

@@ -1,14 +1,9 @@
 import tqdm
 import numpy as np
+import src.utils as utils
 
 
 def iterate_batches(loader, optimizer, batch_size, train_on_gpu, compute_loss):
-    def assign(lt, ls):
-        if lt is None:
-            lt = ls
-        else:
-            lt += ls
-        return lt
     total_loss = None
     total_accuracy = None
     for i_batch, (data, labels) in enumerate(tqdm.tqdm(loader, leave=False)):
@@ -21,8 +16,8 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu, compute_loss):
         loss, accuracy = compute_loss(data, labels)
         loss.backward()
         optimizer.step()
-        total_loss = assign(total_loss, loss / len(labels))
-        total_accuracy = assign(total_accuracy, accuracy)
+        total_loss = utils.assign(total_loss, loss / len(labels))
+        total_accuracy = utils.assign(total_accuracy, accuracy)
     l = total_loss.item()
     a = total_accuracy.item()
     return l, a
