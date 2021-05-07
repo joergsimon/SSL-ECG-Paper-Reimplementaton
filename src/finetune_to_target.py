@@ -84,8 +84,8 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
             valances[valances < 0] = 0
         loss = criterion(l_prime, valances)
 
-        predicted = torch.argmax(l_prime)
-        accuracy = torch.sum(predicted == valances)/valances.shape[0]
+        predicted = torch.argmax(l_prime, dim=1)
+        accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
         return loss, accuracy
 
     def save_model():
