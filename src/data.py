@@ -5,7 +5,6 @@ from functools import partial
 from typing import ClassVar
 from typing import List
 
-import numpy as np
 import torch
 from torch.utils.data import Dataset
 
@@ -14,6 +13,7 @@ import src.datasets.amigos as amigos
 import src.datasets.dataset_utils as du
 import src.datasets.dreamer as dreamer
 import src.datasets.wesad as wesad
+import src.utils as utils
 
 
 @dataclass
@@ -122,6 +122,9 @@ class AugmentationsPretextDataset(Dataset):
             samples.append(torch.tensor(aug_sample))
             labels.append(l)
         labels = [l.value for l in labels]  # convert to int
+
+        samples, labels = utils.shuffle_lists(samples, labels)
+
         # print(samples, labels)
         return samples, labels
 
