@@ -68,7 +68,7 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
     test_loader = DataLoader(dataset, batch_size=p.batch_size,
                              sampler=test_sampeler, num_workers=p.num_workers)
 
-    def compute_loss(data, labels):
+    def compute_loss_and_accuracy(data, labels):
         l_prime = model(data).squeeze()
         # for now, we just try to predict valance
         valances = labels[0]
@@ -81,9 +81,12 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
             print(valances)
             valances[valances < 0] = 0
         loss = criterion(l_prime, valances)
-        return loss
+
+        predicted = torch.argmax(l_prime)
+        accuracy = torch.sum(predicted == valances)/valances.shape[0]
+        return loss, accuracy
 
     def save_model():
         torch.save(model.state_dict(), f'{basepath_to_tuned_model}/tuned_for_{target_id}.pt')
 
-    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss, save_model, train_on_gpu)
+    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu)
