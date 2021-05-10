@@ -62,7 +62,7 @@ def train_finetune_tune_task(target_dataset: d.DataSets, target_id, num_samples=
     ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
     device = "cpu"
     if torch.cuda.is_available():
-        device = "cuda:0"
+        device = "cuda"
         if gpus_per_trial > 1:
             best_trained_model = nn.DataParallel(ecg_net)
     best_trained_model.to(device)
@@ -111,7 +111,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
         optimizer.load_state_dict(optimizer_state)
     device = "cpu"
     if torch.cuda.is_available():
-        device = "cuda:0"
+        device = "cuda"
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
     model.to(device)

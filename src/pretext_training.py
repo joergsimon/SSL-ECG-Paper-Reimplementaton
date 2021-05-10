@@ -62,7 +62,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
     best_trained_model = EcgNetwork(len(d.AugmentationsPretextDataset.STD_AUG) + 1, 5)
     device = "cpu"
     if torch.cuda.is_available():
-        device = "cuda:0"
+        device = "cuda"
         if gpus_per_trial > 1:
             best_trained_model = nn.DataParallel(best_trained_model)
     best_trained_model.to(device)
@@ -101,7 +101,7 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs)
     criterion = nn.BCELoss()
     device = "cpu"
     if torch.cuda.is_available():
-        device = "cuda:0"
+        device = "cuda"
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
     model.to(device)
