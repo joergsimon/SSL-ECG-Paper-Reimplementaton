@@ -81,7 +81,7 @@ def train_finetune_tune_task(target_dataset: d.DataSets, target_id, num_samples=
     plt.show()
 
 
-def finetune_to_target_full_config(hyperparams_config, checkpoint_dir, target_dataset: d.DataSets, target_id):
+def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, target_dataset: d.DataSets=[], target_id=None):
     default_params = TuningParams()
     default_params.batch_size = hyperparams_config['finetune']['batch_size']
     train_on_gpu = torch.cuda.is_available()

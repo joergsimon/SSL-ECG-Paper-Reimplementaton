@@ -81,7 +81,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
     plt.show()
 
 
-def train_pretext_full_config(hyperparams_config, checkpoint_dir, **kwargs):
+def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs):
     print(hyperparams_config)
     print(checkpoint_dir)
     print(f' Kwargs: {kwargs}')
