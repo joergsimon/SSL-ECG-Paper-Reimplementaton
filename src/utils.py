@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import random
 
 
 def y_to_torch(y_list, shape=None):
@@ -20,3 +21,17 @@ def random_splits(indices, test_size, valid_size):
     train_idx, valid_idx = train_and_valid_idx[split:], train_and_valid_idx[:split]
 
     return train_idx, valid_idx, test_idx
+
+
+def shuffle_lists(*lists):
+    l = list(zip(*lists))
+    random.shuffle(l)
+    return zip(*l)
+
+
+def assign(lt, ls):
+    if lt is None:
+        lt = ls
+    else:
+        lt += ls
+    return lt

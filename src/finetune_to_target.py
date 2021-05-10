@@ -1,21 +1,18 @@
-from torch.utils.data import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
 from dataclasses import dataclass
-import torch
-import numpy as np
-import src.data as d
-import src.datasets.amigos as amigos
-import src.utils as utils
-from src.model import EcgNetwork, AvaragePretextLoss, labels_to_vec
+
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
+from torch.utils.data.sampler import SubsetRandomSampler
+
+import src.data as d
 import src.training.training_helper as th
-from functools import partial
-import tqdm
+import src.utils as utils
+from src.constants import Constants as c
+from src.model import EcgNetwork
 
-
-path_to_src_model: str = "/Users/joergsimon/Documents/phd/HELENA/ssl-ecg/model_data"
-basepath_to_tuned_model: str = "/Users/joergsimon/Documents/phd/HELENA/ssl-ecg/model_data/tuned"
+path_to_src_model: str = c.cache_base_path
+basepath_to_tuned_model: str = c.cache_base_path + "tuned/"
 
 
 @dataclass
@@ -37,7 +34,9 @@ def finetune_to_target_full_config(target_dataset: d.DataSets, target_id):
     ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
     model = ecg_net.emotion_head
     embedder = ecg_net.cnn
-    embedder.load_state_dict(torch.load(f'{path_to_src_model}/model_embedding.pt'))
+    device = 'cuda' if train_on_gpu else 'cpu'
+    state_dict = torch.load(f'{path_to_src_model}/model_embedding.pt', map_location=torch.device(device))
+    embedder.load_state_dict(state_dict)
     for p in embedder.parameters():
         p.requires_grad = False
 
@@ -68,7 +67,7 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
     test_loader = DataLoader(dataset, batch_size=p.batch_size,
                              sampler=test_sampeler, num_workers=p.num_workers)
 
-    def compute_loss(data, labels):
+    def compute_loss_and_accuracy(data, labels):
         l_prime = model(data).squeeze()
         # for now, we just try to predict valance
         valances = labels[0]
@@ -81,9 +80,12 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
             print(valances)
             valances[valances < 0] = 0
         loss = criterion(l_prime, valances)
-        return loss
+
+        predicted = torch.argmax(l_prime, dim=1)
+        accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
+        return loss, accuracy
 
     def save_model():
-        torch.save(model.state_dict(), f'{basepath_to_tuned_model}/tuned_for_{target_id}.pt')
+        torch.save(model.state_dict(), f'{basepath_to_tuned_model}tuned_for_{target_id}.pt')
 
-    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss, save_model, train_on_gpu)
+    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu)

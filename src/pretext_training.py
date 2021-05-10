@@ -1,19 +1,19 @@
-from torch.utils.data import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
 from dataclasses import dataclass
-import torch
+from functools import partial
+
 import numpy as np
-import src.data as d
-import src.datasets.amigos as amigos
-import src.utils as utils
-from src.model import EcgNetwork, AvaragePretextLoss, labels_to_vec
 import torch
 import torch.nn as nn
-from functools import partial
 import tqdm
+from torch.utils.data import DataLoader
+from torch.utils.data.sampler import SubsetRandomSampler
 
+import src.data as d
+import src.utils as utils
+from src.constants import Constants as c
+from src.model import EcgNetwork, labels_to_vec
 
-path_to_model: str = "/Users/joergsimon/Documents/phd/HELENA/ssl-ecg/model_data"
+path_to_model: str = c.model_base_path
 
 
 @dataclass
@@ -73,10 +73,14 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
         train_loss = 0.0
         valid_loss = 0.0
 
+        train_accuracy = 0.0
+        valid_accuracy = 0.0
+
         def iterate_batches(loader, loss_type):
-            nonlocal train_loss, valid_loss
+            nonlocal train_loss, valid_loss, valid_accuracy, train_accuracy
             for i_batch, (data, labels) in enumerate(tqdm.tqdm(loader, leave=False)):
                 total_loss = None
+                total_accuracy = None
                 for aug_data, aug_labels in zip(data, labels):
                     if aug_data.shape[0] != p.batch_size:
                         print('skipping too small batch')
@@ -93,6 +97,12 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                         lbls = lbls.cuda()
                     tasks_out = tasks_out.squeeze().T
                     task_loss = criterion(tasks_out, lbls)
+
+                    predicted = torch.argmax(tasks_out, dim=1)
+                    accuracy = torch.sum(predicted == aug_labels).type(torch.float) / aug_labels.shape[0]
+
+                    total_loss = utils.assign(total_loss, task_loss)
+                    total_accuracy = utils.assign(total_accuracy, accuracy)
                     if total_loss is None:
                         total_loss = task_loss
                     else:
@@ -103,12 +113,15 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                 total_loss.backward()
                 optimizer.step()
                 total_loss = total_loss / len(labels)
+                total_accuracy = total_accuracy / len(labels)
                 # update training loss
                 l = total_loss.item() * len(data) * data[0].size(0)
                 if loss_type == 'valid':
                     valid_loss += l
+                    valid_accuracy += total_accuracy
                 else:
                     train_loss += l
+                    train_accuracy += total_accuracy
 
         ###################
         # train the model #
@@ -126,9 +139,12 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
         train_loss = train_loss / len(train_loader.sampler)
         valid_loss = valid_loss / len(valid_loader.sampler)
 
+        train_accuracy = train_accuracy / len(train_loader.sampler)
+        valid_accuracy = valid_accuracy / len(valid_loader.sampler)
+
         # print training/validation statistics
-        print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}'.format(
-            e, train_loss, valid_loss))
+        print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:,3f}'.format(
+            e, train_loss, valid_loss, train_accuracy, valid_accuracy))
 
         # save model if validation loss has decreased
         if valid_loss <= valid_loss_min:

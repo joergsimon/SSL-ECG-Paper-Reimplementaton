@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 import src.datasets.dataset_utils as du
-
+from src.constants import Constants as c
 from src.datasets.torch_helper import ECGCachedWindowsDataset
 
 
@@ -17,7 +17,7 @@ class WesadConstants:
     lbls_file_regex: str = "S[0-9]+_quest.csv"
     data_file_key: str = 'data file'
     label_file_key = 'labels file'
-    path_to_cache: str = "/Users/joergsimon/Documents/phd/HELENA/ssl-ecg/cache/wesad/"
+    path_to_cache: str = c.cache_base_path + "wesad/"
     window_size: int = 2560
 
 
