@@ -99,16 +99,16 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs)
         optimizer.load_state_dict(optimizer_state)
 
     criterion = nn.BCELoss()
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
+    train_on_gpu = torch.cuda.is_available()
+    if train_on_gpu:
+        model = model.cuda()
+        criterion = criterion.cuda()
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
-    model.to(device)
-    train_pretext(model, optimizer, criterion, device, p)
+    train_pretext(model, optimizer, criterion, train_on_gpu, p)
 
 
-def train_pretext(model, optimizer, criterion, device: str, p: PretextParams):
+def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams):
     # dataset_array = []
     # for ds_type in d.ds_to_constructor.keys():
     #     ds_obj = d.ds_to_constructor[ds_type](d.DataConstants.basepath)
@@ -155,14 +155,16 @@ def train_pretext(model, optimizer, criterion, device: str, p: PretextParams):
                     if aug_data.shape[0] != p.batch_size:
                         print('skipping too small batch')
                         continue  # if not full batch, just continue
-                    aug_data = aug_data.to(device)
+                    if train_on_gpu:
+                        aug_data = aug_data.cuda()
                     if len(aug_data.shape) == 2:
                         aug_data = aug_data.unsqueeze(axis=1).float()
                     # clear the gradients of all optimized variables
                     optimizer.zero_grad()
                     tasks_out, _ = model(aug_data)
                     lbls = ltv(aug_labels)
-                    lbls.to(device)
+                    if train_on_gpu:
+                        lbls = lbls.cuda()
                     tasks_out = tasks_out.squeeze().T
                     task_loss = criterion(tasks_out, lbls)
 
