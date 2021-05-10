@@ -169,6 +169,9 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     task_loss = criterion(tasks_out, lbls)
 
                     predicted = torch.argmax(tasks_out, dim=1)
+                    print('pred dev', predicted.device)
+                    print('sum dev', torch.sum(predicted == aug_labels).type(torch.float).device)
+                    print('aug dev', aug_labels.device)
                     accuracy = torch.sum(predicted == aug_labels).type(torch.float) / aug_labels.shape[0]
 
                     total_loss = utils.assign(total_loss, task_loss)
