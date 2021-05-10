@@ -59,13 +59,13 @@ def train_finetune_tune_task(target_dataset: d.DataSets, target_id, num_samples=
 
     dataset = d.ds_to_constructor[target_dataset](d.DataConstants.basepath)
     does_not_matter = len(d.AugmentationsPretextDataset.STD_AUG) + 1
-    ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
-        if gpus_per_trial > 1:
-            best_trained_model = nn.DataParallel(ecg_net)
-    best_trained_model.to(device)
+    best_trained_model = EcgNetwork(does_not_matter, dataset.target_size).emotion_head
+
+    train_on_gpu = torch.cuda.is_available()
+    if train_on_gpu:
+        best_trained_model = best_trained_model.cuda()
+        if torch.cuda.device_count() > 1:
+            best_trained_model = nn.DataParallel(best_trained_model)
 
     checkpoint_path = os.path.join(best_trial.checkpoint.value, "checkpoint")
 
@@ -109,16 +109,17 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
         model_state, optimizer_state = torch.load(checkpoint)
         model.load_state_dict(model_state)
         optimizer.load_state_dict(optimizer_state)
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
+
+    train_on_gpu = torch.cuda.is_available()
+    if train_on_gpu:
+        model = model.cuda()
+        criterion = criterion.cuda()
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
-    model.to(device)
     finetune(model, optimizer, criterion, dataset, train_on_gpu, default_params, target_id)
 
 
-def finetune(model, optimizer, criterion, dataset, device: str, p: TuningParams, target_id):
+def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: TuningParams, target_id):
 
     num_train = len(dataset)
     indices = list(range(num_train))
@@ -142,7 +143,8 @@ def finetune(model, optimizer, criterion, dataset, device: str, p: TuningParams,
         valances = labels[0]
         valances[valances != valances] = 0 # remove nans
         valances = valances.type(torch.LongTensor) # we quantisize
-        valances.to(device)
+        if train_on_gpu:
+            valances = valances.cuda()
         if torch.any(valances < 0):
             print(labels[0])
             print(valances)

@@ -82,9 +82,6 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
 
 
 def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs):
-    print(hyperparams_config)
-    print(checkpoint_dir)
-    print(f' Kwargs: {kwargs}')
     p = PretextParams()
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(d.AugmentationsPretextDataset.STD_AUG) + 1, 5)
@@ -170,9 +167,6 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     task_loss = criterion(tasks_out, lbls)
 
                     predicted = torch.argmax(tasks_out, dim=1)
-                    print('pred dev', predicted.device)
-                    print('sum dev', torch.sum(predicted == aug_labels).type(torch.float).device)
-                    print('aug dev', aug_labels.device)
                     accuracy = torch.sum(predicted == aug_labels).type(torch.float) / aug_labels.shape[0]
 
                     total_loss = utils.assign(total_loss, task_loss)

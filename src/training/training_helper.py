@@ -3,14 +3,15 @@ import numpy as np
 import src.utils as utils
 
 
-def iterate_batches(loader, optimizer, batch_size, device, compute_loss):
+def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_loss):
     total_loss = None
     total_accuracy = None
     for i_batch, (data, labels) in enumerate(tqdm.tqdm(loader, leave=False)):
         if data.shape[0] != batch_size:
             print('skipping too small batch')
             continue  # if not full batch, just continue
-        data, labels = data.to(device), labels.to(device)
+        if train_on_gpu:
+            data, labels = data.cuda(), labels.cuda()
         optimizer.zero_grad()
         loss, accuracy = compute_loss(data, labels)
         loss.backward()
@@ -22,7 +23,7 @@ def iterate_batches(loader, optimizer, batch_size, device, compute_loss):
     return l, a
 
 
-def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, device):
+def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu: bool):
     valid_loss_min = np.Inf  # track change in validation loss
 
     for e in tqdm.tqdm(range(epochs)):
@@ -37,7 +38,7 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # train the model #
         ###################
         model.train()
-        l, a = iterate_batches(train_loader, optimizer, batch_size, device, compute_loss_and_accuracy)
+        l, a = iterate_batches(train_loader, optimizer, batch_size, train_on_gpu, compute_loss_and_accuracy)
         train_loss += l
         train_accuracy += a
 
@@ -45,7 +46,7 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # validate the model #
         ######################
         model.eval()
-        l, a = iterate_batches(valid_loader, optimizer, batch_size, device, compute_loss_and_accuracy)
+        l, a = iterate_batches(valid_loader, optimizer, batch_size, train_on_gpu, compute_loss_and_accuracy)
         valid_loss += l
         valid_accuracy += a
 
