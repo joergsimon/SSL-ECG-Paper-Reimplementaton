@@ -9,11 +9,13 @@ import src.finetune_to_target as ftt
 run_tests = False
 
 if __name__ == '__main__':
+    # TODO: 2. modify to use Ray Tune
+    # TODO: 3. plot results using Rays Analysis Module
     # w, wl = dreamer.load_ecg_windows(data.DataConstants.basepath)
     # print(len(w), len(wl))
     # w, wl = wesad.load_ecg_windows(data.DataConstants.basepath)
-    # pt.train_pretext_full_config()
-    ftt.finetune_to_target_full_config(data.DataSets.AMIGOS, 'test_123')
+    pt.train_pretext_tune_task()
+    ftt.train_finetune_tune_task(data.DataSets.AMIGOS, 'test_123')
     #dataset = amigos.ECGAmigosCachedWindowsDataset(data.DataConstants.basepath)
     #print(len(dataset))
     #print(dataset[1])

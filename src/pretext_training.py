@@ -1,10 +1,14 @@
+import os
 from dataclasses import dataclass
 from functools import partial
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 import tqdm
+from ray import tune
+from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
@@ -25,20 +29,82 @@ class PretextParams:
     test_size = 0.1
 
 
-def train_pretext_full_config():
-    default_params = PretextParams()
+def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
+    config = {
+        "pretext": {
+            "batch_size": tune.choice([8, 16, 32]),
+            "adam": {"lr": tune.loguniform(1e-4, 1e-1)}
+        }
+    }
+
+    scheduler = ASHAScheduler(
+        max_t=max_num_epochs,
+        grace_period=1,
+        reduction_factor=2)
+    result = tune.run(
+        tune.with_parameters(train_pretext_full_config),
+        resources_per_trial={"cpu": 3, "gpu": gpus_per_trial},
+        config=config,
+        metric="loss",
+        mode="min",
+        num_samples=num_samples,
+        scheduler=scheduler
+    )
+
+    best_trial = result.get_best_trial("loss", "min", "last")
+    print("Best trial config: {}".format(best_trial.config))
+    print("Best trial final validation loss: {}".format(
+        best_trial.last_result["loss"]))
+    print("Best trial final validation accuracy: {}".format(
+        best_trial.last_result["accuracy"]))
+
+    best_trained_model = EcgNetwork(len(d.AugmentationsPretextDataset.STD_AUG) + 1, 5)
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda:0"
+        if gpus_per_trial > 1:
+            best_trained_model = nn.DataParallel(best_trained_model)
+    best_trained_model.to(device)
+
+    checkpoint_path = os.path.join(best_trial.checkpoint.value, "checkpoint")
+
+    model_state, optimizer_state = torch.load(checkpoint_path)
+    best_trained_model.load_state_dict(model_state)
+
+    dfs = result.trial_dataframes
+    ax = None  # This plots everything on the same plot
+    for d in dfs.values():
+        ax = d.mean_accuracy.plot(ax=ax, legend=False)
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Mean Accuracy")
+    plt.show()
+
+
+def train_pretext_full_config(hyperparams_config, checkpoint_dir):
+    p = PretextParams()
+    p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(d.AugmentationsPretextDataset.STD_AUG) + 1, 5)
-    optimizer = torch.optim.Adam(model.parameters(), 0.00001)
-    #per_task_criterion = nn.BCELoss()
-    criterion = nn.BCELoss()#AvaragePretextLoss(per_task_criterion, [1.]*5)
-    train_on_gpu = torch.cuda.is_available()
-    if train_on_gpu:
-        model = model.cuda()
-        criterion = criterion.cuda()
-    train_pretext(model, optimizer, criterion, train_on_gpu, default_params)
+    optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])
+
+    # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
+    # should be restored.
+    if checkpoint_dir:
+        checkpoint = os.path.join(checkpoint_dir, "checkpoint")
+        model_state, optimizer_state = torch.load(checkpoint)
+        model.load_state_dict(model_state)
+        optimizer.load_state_dict(optimizer_state)
+
+    criterion = nn.BCELoss()
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda:0"
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
+    model.to(device)
+    train_pretext(model, optimizer, criterion, device, p)
 
 
-def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams):
+def train_pretext(model, optimizer, criterion, device: str, p: PretextParams):
     # dataset_array = []
     # for ds_type in d.ds_to_constructor.keys():
     #     ds_obj = d.ds_to_constructor[ds_type](d.DataConstants.basepath)
@@ -85,16 +151,14 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     if aug_data.shape[0] != p.batch_size:
                         print('skipping too small batch')
                         continue  # if not full batch, just continue
-                    if train_on_gpu:
-                        aug_data = aug_data.cuda()
+                    aug_data = aug_data.to(device)
                     if len(aug_data.shape) == 2:
                         aug_data = aug_data.unsqueeze(axis=1).float()
                     # clear the gradients of all optimized variables
                     optimizer.zero_grad()
                     tasks_out, _ = model(aug_data)
                     lbls = ltv(aug_labels)
-                    if train_on_gpu:
-                        lbls = lbls.cuda()
+                    lbls.to(device)
                     tasks_out = tasks_out.squeeze().T
                     task_loss = criterion(tasks_out, lbls)
 
@@ -143,8 +207,18 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
         valid_accuracy = valid_accuracy / len(valid_loader.sampler)
 
         # print training/validation statistics
-        print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:,3f}'.format(
+        print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:.3f}'.format(
             e, train_loss, valid_loss, train_accuracy, valid_accuracy))
+
+        # Here we save a checkpoint. It is automatically registered with
+        # Ray Tune and will potentially be passed as the `checkpoint_dir`
+        # parameter in future iterations.
+        with tune.checkpoint_dir(step=e) as checkpoint_dir:
+            path = os.path.join(checkpoint_dir, "checkpoint")
+            torch.save(
+                (model.state_dict(), optimizer.state_dict()), path)
+
+        tune.report(loss=valid_loss, accuracy=valid_accuracy)
 
         # save model if validation loss has decreased
         if valid_loss <= valid_loss_min:

@@ -1,7 +1,11 @@
+import os
 from dataclasses import dataclass
 
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+from ray import tune
+from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
@@ -24,8 +28,62 @@ class TuningParams:
     test_size = 0.1
 
 
-def finetune_to_target_full_config(target_dataset: d.DataSets, target_id):
+def train_finetune_tune_task(target_dataset: d.DataSets, target_id, num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
+    config = {
+        "finetune": {
+            "batch_size": tune.choice([8, 16, 32]),
+            "adam": {"lr": tune.loguniform(1e-4, 1e-1)}
+        }
+    }
+
+    scheduler = ASHAScheduler(
+        max_t=max_num_epochs,
+        grace_period=1,
+        reduction_factor=2)
+    result = tune.run(
+        tune.with_parameters(finetune_to_target_full_config, target_dataset=target_dataset, target_id=target_id),
+        resources_per_trial={"cpu": 3, "gpu": gpus_per_trial},
+        config=config,
+        metric="loss",
+        mode="min",
+        num_samples=num_samples,
+        scheduler=scheduler
+    )
+
+    best_trial = result.get_best_trial("loss", "min", "last")
+    print("Best trial config: {}".format(best_trial.config))
+    print("Best trial final validation loss: {}".format(
+        best_trial.last_result["loss"]))
+    print("Best trial final validation accuracy: {}".format(
+        best_trial.last_result["accuracy"]))
+
+    dataset = d.ds_to_constructor[target_dataset](d.DataConstants.basepath)
+    does_not_matter = len(d.AugmentationsPretextDataset.STD_AUG) + 1
+    ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda:0"
+        if gpus_per_trial > 1:
+            best_trained_model = nn.DataParallel(ecg_net)
+    best_trained_model.to(device)
+
+    checkpoint_path = os.path.join(best_trial.checkpoint.value, "checkpoint")
+
+    model_state, optimizer_state = torch.load(checkpoint_path)
+    best_trained_model.load_state_dict(model_state)
+
+    dfs = result.trial_dataframes
+    ax = None  # This plots everything on the same plot
+    for d in dfs.values():
+        ax = d.mean_accuracy.plot(ax=ax, legend=False)
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Mean Accuracy")
+    plt.show()
+
+
+def finetune_to_target_full_config(hyperparams_config, checkpoint_dir, target_dataset: d.DataSets, target_id):
     default_params = TuningParams()
+    default_params.batch_size = hyperparams_config['finetune']['batch_size']
     train_on_gpu = torch.cuda.is_available()
 
     dataset = d.ds_to_constructor[target_dataset](d.DataConstants.basepath)
@@ -41,15 +99,26 @@ def finetune_to_target_full_config(target_dataset: d.DataSets, target_id):
         p.requires_grad = False
 
     dataset = d.EmbeddingsDataset(embedder, dataset, True, d.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu)
-    optimizer = torch.optim.Adam(model.parameters(), 0.00001)
+    optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])
     criterion = nn.NLLLoss()
-    if train_on_gpu:
-        model = model.cuda()
-        criterion = criterion.cuda()
+
+    # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
+    # should be restored.
+    if checkpoint_dir:
+        checkpoint = os.path.join(checkpoint_dir, "checkpoint")
+        model_state, optimizer_state = torch.load(checkpoint)
+        model.load_state_dict(model_state)
+        optimizer.load_state_dict(optimizer_state)
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda:0"
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
+    model.to(device)
     finetune(model, optimizer, criterion, dataset, train_on_gpu, default_params, target_id)
 
 
-def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: TuningParams, target_id):
+def finetune(model, optimizer, criterion, dataset, device: str, p: TuningParams, target_id):
 
     num_train = len(dataset)
     indices = list(range(num_train))
@@ -73,8 +142,7 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
         valances = labels[0]
         valances[valances != valances] = 0 # remove nans
         valances = valances.type(torch.LongTensor) # we quantisize
-        if train_on_gpu:
-            valances = valances.cuda()
+        valances.to(device)
         if torch.any(valances < 0):
             print(labels[0])
             print(valances)
@@ -88,4 +156,4 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
     def save_model():
         torch.save(model.state_dict(), f'{basepath_to_tuned_model}tuned_for_{target_id}.pt')
 
-    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu)
+    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, device)
