@@ -14,11 +14,12 @@ import src.datasets.dataset_utils as du
 import src.datasets.dreamer as dreamer
 import src.datasets.wesad as wesad
 import src.utils as utils
+from src.constants import Constants as c
 
 
 @dataclass
 class DataConstants:
-    basepath: ClassVar[str] = "/home/jsimon/Desktop/knownew/600 Datasets/human-telemetry/other_datasets_joerg/"#"/Users/joergsimon/Documents/work/datasets_cache/"#"/Volumes/knownew/600 Datasets/human-telemetry/other_datasets_joerg/"#
+    basepath: ClassVar[str] = c.data_base_path
 
 
 class DataSets(Enum):

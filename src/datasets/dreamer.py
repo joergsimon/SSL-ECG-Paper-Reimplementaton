@@ -7,11 +7,12 @@ import scipy.io as sciio
 
 import src.datasets.dataset_utils as du
 from src.datasets.torch_helper import ECGCachedWindowsDataset
+from src.constants import Constants as c
 
 
 class DreamerConstants:
     path_to_original_data: str = "dreamer/DREAMER.mat"
-    path_to_cache: str = "/home/jsimon/Documents/HELENA/ssl-ecg/cache/dreamer/"
+    path_to_cache: str = c.cache_base_path + "dreamer/"
     window_size: int = 2560
 
 

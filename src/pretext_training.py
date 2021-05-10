@@ -1,19 +1,19 @@
-from torch.utils.data import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
 from dataclasses import dataclass
-import torch
+from functools import partial
+
 import numpy as np
-import src.data as d
-import src.datasets.amigos as amigos
-import src.utils as utils
-from src.model import EcgNetwork, AvaragePretextLoss, labels_to_vec
 import torch
 import torch.nn as nn
-from functools import partial
 import tqdm
+from torch.utils.data import DataLoader
+from torch.utils.data.sampler import SubsetRandomSampler
 
+import src.data as d
+import src.utils as utils
+from src.constants import Constants as c
+from src.model import EcgNetwork, labels_to_vec
 
-path_to_model: str = "/Users/joergsimon/Documents/phd/HELENA/ssl-ecg/model_data"
+path_to_model: str = c.model_base_path
 
 
 @dataclass

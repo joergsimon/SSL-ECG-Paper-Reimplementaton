@@ -8,12 +8,13 @@ import scipy.io as sciio
 
 import src.datasets.dataset_utils as du
 from src.datasets.torch_helper import ECGCachedWindowsDataset
+from src.constants import Constants as c
 
 
 class AmigosConstants:
     glob_to_original_data: str = "amigos/data_original/**/*.mat"
     glob_to_preprocessed_data: str = "amigos/data-preprocessed/**/*.mat"
-    path_to_cache: str = "/home/jsimon/Documents/HELENA/ssl-ecg/cache/amigos/"
+    path_to_cache: str = c.cache_base_path + "amigos/"
     path_to_selfassement: str = "amigos/SelfAsessment.xlsx"
     window_size: int = 2560
 
