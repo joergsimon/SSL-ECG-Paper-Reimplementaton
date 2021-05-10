@@ -157,6 +157,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                         continue  # if not full batch, just continue
                     if train_on_gpu:
                         aug_data = aug_data.cuda()
+                        aug_labels = aug_labels.cuda()
                     if len(aug_data.shape) == 2:
                         aug_data = aug_data.unsqueeze(axis=1).float()
                     # clear the gradients of all optimized variables
