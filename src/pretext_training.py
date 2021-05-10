@@ -48,7 +48,8 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
         metric="loss",
         mode="min",
         num_samples=num_samples,
-        scheduler=scheduler
+        scheduler=scheduler,
+        log_to_file=True
     )
 
     best_trial = result.get_best_trial("loss", "min", "last")
@@ -81,6 +82,8 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
 
 
 def train_pretext_full_config(hyperparams_config, checkpoint_dir):
+    print(hyperparams_config)
+    print(checkpoint_dir)
     p = PretextParams()
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(d.AugmentationsPretextDataset.STD_AUG) + 1, 5)
