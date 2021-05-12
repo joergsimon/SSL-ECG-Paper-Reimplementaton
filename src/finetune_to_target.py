@@ -78,6 +78,7 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
         ax = d.mean_accuracy.plot(ax=ax, legend=False)
     ax.set_xlabel("Epochs")
     ax.set_ylabel("Mean Accuracy")
+    plt.savefig('overview-finetuning.png')
     plt.show()
 
 
