@@ -77,6 +77,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
         ax = d.mean_accuracy.plot(ax=ax, legend=False)
     ax.set_xlabel("Epochs")
     ax.set_ylabel("Mean Accuracy")
+    plt.savefig('overview-pretext.png')
     plt.show()
 
 
