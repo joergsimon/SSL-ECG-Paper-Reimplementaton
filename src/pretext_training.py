@@ -12,7 +12,7 @@ from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
-import src.data as d
+import src.data as dta
 import src.utils as utils
 from src.constants import Constants as c
 from src.model import EcgNetwork, labels_to_vec
@@ -58,8 +58,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
         best_trial.last_result["loss"]))
     print("Best trial final validation accuracy: {}".format(
         best_trial.last_result["accuracy"]))
-
-    best_trained_model = EcgNetwork(len(d.AugmentationsPretextDataset.STD_AUG) + 1, 5)
+    best_trained_model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda"
@@ -84,7 +83,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
 def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs):
     p = PretextParams()
     p.batch_size = hyperparams_config['pretext']['batch_size']
-    model = EcgNetwork(len(d.AugmentationsPretextDataset.STD_AUG) + 1, 5)
+    model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
@@ -111,9 +110,9 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
     #     ds_obj = d.ds_to_constructor[ds_type](d.DataConstants.basepath)
     #     dataset_array.append(ds_obj)
     # dataset = torch.utils.data.ConcatDataset(dataset_array)
-    dataset = d.CombinedECGDatasets(d.ds_to_constructor.keys(), d.DataConstants.basepath)
+    dataset = dta.CombinedECGDatasets(dta.ds_to_constructor.keys(), dta.DataConstants.basepath)
     # dataset = amigos.ECGAmigosCachedWindowsDataset(d.DataConstants.basepath)
-    dataset = d.AugmentationsPretextDataset(dataset, d.AugmentationsPretextDataset.STD_AUG)
+    dataset = dta.AugmentationsPretextDataset(dataset, dta.AugmentationsPretextDataset.STD_AUG)
 
     num_train = len(dataset)
     indices = list(range(num_train))
