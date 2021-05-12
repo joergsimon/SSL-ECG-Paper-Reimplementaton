@@ -9,7 +9,7 @@ from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
-import src.data as d
+import src.data as dta
 import src.training.training_helper as th
 import src.utils as utils
 from src.constants import Constants as c
@@ -28,7 +28,7 @@ class TuningParams:
     test_size = 0.1
 
 
-def train_finetune_tune_task(target_dataset: d.DataSets, target_id, num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
+def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
     config = {
         "finetune": {
             "batch_size": tune.choice([8, 16, 32]),
@@ -57,8 +57,8 @@ def train_finetune_tune_task(target_dataset: d.DataSets, target_id, num_samples=
     print("Best trial final validation accuracy: {}".format(
         best_trial.last_result["accuracy"]))
 
-    dataset = d.ds_to_constructor[target_dataset](d.DataConstants.basepath)
-    does_not_matter = len(d.AugmentationsPretextDataset.STD_AUG) + 1
+    dataset = dta.ds_to_constructor[target_dataset](dta.DataConstants.basepath)
+    does_not_matter = len(dta.AugmentationsPretextDataset.STD_AUG) + 1
     best_trained_model = EcgNetwork(does_not_matter, dataset.target_size).emotion_head
 
     train_on_gpu = torch.cuda.is_available()
@@ -81,14 +81,14 @@ def train_finetune_tune_task(target_dataset: d.DataSets, target_id, num_samples=
     plt.show()
 
 
-def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, target_dataset: d.DataSets=[], target_id=None):
+def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, target_dataset: dta.DataSets=[], target_id=None):
     default_params = TuningParams()
     default_params.batch_size = hyperparams_config['finetune']['batch_size']
     train_on_gpu = torch.cuda.is_available()
 
-    dataset = d.ds_to_constructor[target_dataset](d.DataConstants.basepath)
+    dataset = dta.ds_to_constructor[target_dataset](dta.DataConstants.basepath)
 
-    does_not_matter = len(d.AugmentationsPretextDataset.STD_AUG) + 1
+    does_not_matter = len(dta.AugmentationsPretextDataset.STD_AUG) + 1
     ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
     model = ecg_net.emotion_head
     embedder = ecg_net.cnn
@@ -98,7 +98,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
     for p in embedder.parameters():
         p.requires_grad = False
 
-    dataset = d.EmbeddingsDataset(embedder, dataset, True, d.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu)
+    dataset = dta.EmbeddingsDataset(embedder, dataset, True, dta.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])
     criterion = nn.NLLLoss()
 
