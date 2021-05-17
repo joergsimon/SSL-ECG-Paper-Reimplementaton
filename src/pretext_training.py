@@ -80,6 +80,14 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
     plt.savefig('overview-pretext.png')
     plt.show()
 
+    print('------------------------------------------------------------------------------')
+    print('               Saving best model from hyperparam search                       ')
+    print('               for use in finetuning                                          ')
+    print('------------------------------------------------------------------------------')
+    torch.save(best_trained_model.cnn.state_dict(), f'{path_to_model}/model_embedding.pt')
+    for i, t in enumerate(best_trained_model.task_heads):
+        torch.save(t.state_dict(), f'{path_to_model}/task_head_{i}.pt')
+
 
 def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs):
     p = PretextParams()
