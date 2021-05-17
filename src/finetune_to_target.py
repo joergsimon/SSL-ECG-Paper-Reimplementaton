@@ -81,6 +81,12 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
     plt.savefig('overview-finetuning.png')
     plt.show()
 
+    print('------------------------------------------------------------------------------')
+    print('               Saving best model from hyperparam search                       ')
+    print('               for later use                                                  ')
+    print('------------------------------------------------------------------------------')
+    torch.save(best_trained_model.state_dict(), f'{basepath_to_tuned_model}tuned_for_{target_id}.pt')
+
 
 def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, target_dataset: dta.DataSets=[], target_id=None):
     default_params = TuningParams()
