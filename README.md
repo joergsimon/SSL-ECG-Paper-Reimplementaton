@@ -13,6 +13,14 @@ Anyway, I provided two possible ways to get your conda env working:
 
 or you execute the `install.sh` script, although you need to manually intervine all the times.
 
+**After you did install the environment:**
+
+After you did install the environment, there are some more steps to do:
+
+create a folder `cache` on the top level, and then one for each dataset you want to use inside, so `cache/amigos`, 
+`cache/wesad` and `cache/dreamer`.
+
+also edit the file `src/constants.py` and change the variables towards the correct 
 ## Mode of usage
 
 I uploaded the pretrained models, so you can use them like in `src/run_example.py`
