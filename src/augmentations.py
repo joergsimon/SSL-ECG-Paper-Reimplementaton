@@ -36,7 +36,7 @@ def negate(signal, *args, **kwargs):
 
 
 def temp_invert(signal, *args, **kwargs):
-    t_inv = np.flip(signal)
+    t_inv = np.flip(signal).copy()
     return t_inv
 
 
