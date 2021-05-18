@@ -120,13 +120,7 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs)
 
 
 def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams):
-    # dataset_array = []
-    # for ds_type in d.ds_to_constructor.keys():
-    #     ds_obj = d.ds_to_constructor[ds_type](d.DataConstants.basepath)
-    #     dataset_array.append(ds_obj)
-    # dataset = torch.utils.data.ConcatDataset(dataset_array)
     dataset = dta.CombinedECGDatasets(dta.ds_to_constructor.keys(), dta.DataConstants.basepath)
-    # dataset = amigos.ECGAmigosCachedWindowsDataset(d.DataConstants.basepath)
     dataset = dta.AugmentationsPretextDataset(dataset, dta.AugmentationsPretextDataset.STD_AUG)
 
     num_train = len(dataset)
