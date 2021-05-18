@@ -28,6 +28,14 @@ class TuningParams:
     test_size = 0.1
 
 
+good_params_for_single_run = {
+    "finetune": {
+        "batch_size": 16,
+        "adam": {"lr": 0.000128268}
+    }
+}
+
+
 def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
     config = {
         "finetune": {

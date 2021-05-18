@@ -29,6 +29,14 @@ class PretextParams:
     test_size = 0.1
 
 
+good_params_for_single_run = {
+    "pretext": {
+        "batch_size": 16,
+        "adam": {"lr": 0.000128268}
+    }
+}
+
+
 def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
     config = {
         "pretext": {
