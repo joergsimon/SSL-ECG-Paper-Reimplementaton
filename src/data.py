@@ -78,7 +78,7 @@ class AugmentationsPretextDataset(Dataset):
     STD_AUG = [
         (aug.AugmentationTypes.ADD_NOISE, partial(aug.add_noise, SNR=15)),
         (aug.AugmentationTypes.NEGATE, aug.negate),
-        #(aug.AugmentationTypes.PERMUTATE, partial(aug.permuatate, n_sections=5)),
+        (aug.AugmentationTypes.PERMUTATE, partial(aug.permuatate, n_sections=5)),
         (aug.AugmentationTypes.SCALE, partial(aug.scale, beta=2)),
         (aug.AugmentationTypes.TEMP_INV, aug.temp_invert),
         #(aug.AugmentationTypes.TIME_WRAP, partial(aug.time_warp, n_sections=5, k=2))
