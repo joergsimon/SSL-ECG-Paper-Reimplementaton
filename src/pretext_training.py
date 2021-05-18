@@ -52,25 +52,6 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
         log_to_file=True
     )
 
-    best_trial = result.get_best_trial("loss", "min", "last")
-    print("Best trial config: {}".format(best_trial.config))
-    print("Best trial final validation loss: {}".format(
-        best_trial.last_result["loss"]))
-    print("Best trial final validation accuracy: {}".format(
-        best_trial.last_result["accuracy"]))
-    best_trained_model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
-        if gpus_per_trial > 1:
-            best_trained_model = nn.DataParallel(best_trained_model)
-    best_trained_model.to(device)
-
-    checkpoint_path = os.path.join(best_trial.checkpoint.value, "checkpoint")
-
-    model_state, optimizer_state = torch.load(checkpoint_path)
-    best_trained_model.load_state_dict(model_state)
-
     dfs = result.trial_dataframes
     ax = None  # This plots everything on the same plot
     for d in dfs.values():
@@ -79,6 +60,23 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
     ax.set_ylabel("Mean Accuracy")
     plt.savefig('overview-pretext.png')
     plt.show()
+
+    best_trial = result.get_best_trial("loss", "min", "last")
+    print("Best trial config: {}".format(best_trial.config))
+    print("Best trial final validation loss: {}".format(
+        best_trial.last_result["loss"]))
+    print("Best trial final validation accuracy: {}".format(
+        best_trial.last_result["accuracy"]))
+    best_trained_model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
+    if torch.cuda.is_available():
+        best_trained_model = best_trained_model.cuda()
+        if gpus_per_trial > 1:
+            best_trained_model = nn.DataParallel(best_trained_model)
+
+    checkpoint_path = os.path.join(best_trial.checkpoint.value, "checkpoint")
+
+    model_state, optimizer_state = torch.load(checkpoint_path)
+    best_trained_model.load_state_dict(model_state)
 
     print('------------------------------------------------------------------------------')
     print('               Saving best model from hyperparam search                       ')
