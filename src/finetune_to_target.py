@@ -50,6 +50,15 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
         scheduler=scheduler
     )
 
+    dfs = result.trial_dataframes
+    ax = None  # This plots everything on the same plot
+    for d in dfs.values():
+        ax = d.mean_accuracy.plot(ax=ax, legend=False)
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("Mean Accuracy")
+    plt.savefig('overview-finetuning.png')
+    plt.show()
+
     best_trial = result.get_best_trial("loss", "min", "last")
     print("Best trial config: {}".format(best_trial.config))
     print("Best trial final validation loss: {}".format(
@@ -71,15 +80,6 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
 
     model_state, optimizer_state = torch.load(checkpoint_path)
     best_trained_model.load_state_dict(model_state)
-
-    dfs = result.trial_dataframes
-    ax = None  # This plots everything on the same plot
-    for d in dfs.values():
-        ax = d.mean_accuracy.plot(ax=ax, legend=False)
-    ax.set_xlabel("Epochs")
-    ax.set_ylabel("Mean Accuracy")
-    plt.savefig('overview-finetuning.png')
-    plt.show()
 
     print('------------------------------------------------------------------------------')
     print('               Saving best model from hyperparam search                       ')
