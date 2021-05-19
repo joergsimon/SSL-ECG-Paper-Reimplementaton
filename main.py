@@ -10,7 +10,7 @@ run_example = True
 
 if __name__ == '__main__':
     if run_hyperparam:
-        pt.train_pretext_tune_task()
+        pt.train_pretext_tune_task(num_samples=6)
         ftt.train_finetune_tune_task(data.DataSets.AMIGOS, 'test_123')
     if run_example:
         re.run_example(data.DataSets.AMIGOS, 'test_123')
