@@ -12,7 +12,7 @@ run_example = True
 
 if __name__ == '__main__':
     if run_hyperparam:
-        pt.train_pretext_tune_task()
+        pt.train_pretext_tune_task(num_samples=6)
         ftt.train_finetune_tune_task(data.DataSets.AMIGOS, 'test_123')
     if pre_train_single:
         pt.train_pretext_full_config(pt.good_params_for_single_run)

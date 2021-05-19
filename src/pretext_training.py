@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-import tqdm
 from ray import tune
 from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader
@@ -41,7 +40,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
     config = {
         "pretext": {
             "batch_size": tune.choice([8, 16, 32]),
-            "adam": {"lr": tune.loguniform(5e-5, 5e-3)}
+            "adam": {"lr": tune.loguniform(9e-5, 2e-3)}
         }
     }
 
@@ -119,7 +118,7 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs)
     train_pretext(model, optimizer, criterion, train_on_gpu, p)
 
 
-def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams):
+def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams, use_tune=True):
     dataset = dta.CombinedECGDatasets(dta.ds_to_constructor.keys(), dta.DataConstants.basepath)
     dataset = dta.AugmentationsPretextDataset(dataset, dta.AugmentationsPretextDataset.STD_AUG)
 
@@ -143,7 +142,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
 
     ltv = partial(labels_to_vec, n_tasks=len(dataset.augmentations) + 1, debug_ltv=False)  # just a shortcut
 
-    for e in tqdm.tqdm(range(p.epochs)):
+    for e in utils.pbar(range(p.epochs)):
 
         train_loss = 0.0
         valid_loss = 0.0
@@ -153,7 +152,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
 
         def iterate_batches(loader, loss_type):
             nonlocal train_loss, valid_loss, valid_accuracy, train_accuracy
-            for i_batch, (data, labels) in enumerate(tqdm.tqdm(loader, leave=False)):
+            for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
                 total_loss = None
                 total_accuracy = None
                 for aug_data, aug_labels in zip(data, labels):
@@ -222,15 +221,16 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
         print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:.3f}'.format(
             e, train_loss, valid_loss, train_accuracy, valid_accuracy))
 
-        # Here we save a checkpoint. It is automatically registered with
-        # Ray Tune and will potentially be passed as the `checkpoint_dir`
-        # parameter in future iterations.
-        with tune.checkpoint_dir(step=e) as checkpoint_dir:
-            path = os.path.join(checkpoint_dir, "checkpoint")
-            torch.save(
-                (model.state_dict(), optimizer.state_dict()), path)
+        if use_tune:
+            # Here we save a checkpoint. It is automatically registered with
+            # Ray Tune and will potentially be passed as the `checkpoint_dir`
+            # parameter in future iterations.
+            with tune.checkpoint_dir(step=e) as checkpoint_dir:
+                path = os.path.join(checkpoint_dir, "checkpoint")
+                torch.save(
+                    (model.state_dict(), optimizer.state_dict()), path)
 
-        tune.report(loss=valid_loss, accuracy=valid_accuracy)
+            tune.report(loss=valid_loss, accuracy=valid_accuracy)
 
         # save model if validation loss has decreased
         if valid_loss <= valid_loss_min:

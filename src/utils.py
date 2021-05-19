@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 import random
+import tqdm
+from src.constants import Constants as c
 
 
 def y_to_torch(y_list, shape=None):
@@ -35,3 +37,10 @@ def assign(lt, ls):
     else:
         lt += ls
     return lt
+
+
+def pbar(iterable=None, **kwargs):
+    if c.use_ray:
+        return iterable
+    else:
+        return tqdm.tqdm(iterable, kwargs)
