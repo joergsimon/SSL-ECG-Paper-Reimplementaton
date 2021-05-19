@@ -5,6 +5,7 @@ from functools import partial
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torch.backends.cudnn
 import torch.nn as nn
 from ray import tune
 from ray.tune.schedulers import ASHAScheduler
@@ -120,6 +121,10 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
 
 
 def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams, use_tune=True):
+
+    # we have convolutions here so allow the automatic optimization to ramp it up
+    torch.backends.cudnn.benchmark = True
+
     dataset = dta.CombinedECGDatasets(dta.ds_to_constructor.keys(), dta.DataConstants.basepath)
     dataset = dta.AugmentationsPretextDataset(dataset, dta.AugmentationsPretextDataset.STD_AUG)
 
