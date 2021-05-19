@@ -32,7 +32,7 @@ class PretextParams:
 
 good_params_for_single_run = {
     "pretext": {
-        "batch_size": 16,
+        "batch_size": 64,
         "adam": {"lr": 0.000128268}
     }
 }
