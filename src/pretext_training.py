@@ -22,10 +22,11 @@ path_to_model: str = c.model_base_path
 @dataclass
 class PretextParams:
     batch_size:int = 32  # don't forget we get all the agumentations per example
-    num_workers:int = 1#2
+    num_workers:int = 3
     epochs:int = 200
     valid_size = 0.2
     test_size = 0.1
+    pin_memory=True
 
 
 good_params_for_single_run = {
@@ -132,7 +133,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
 
     # prepare data loaders (combine dataset and sampler)
     train_loader = DataLoader(dataset, batch_size=p.batch_size,
-                              sampler=train_sampler, num_workers=p.num_workers)
+                              sampler=train_sampler, num_workers=p.num_workers, pin_memory=p.pin_memory)
     valid_loader = DataLoader(dataset, batch_size=p.batch_size,
                               sampler=valid_sampler, num_workers=p.num_workers)
     test_loader = DataLoader(dataset, batch_size=p.batch_size,
