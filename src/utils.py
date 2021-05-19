@@ -43,4 +43,4 @@ def pbar(iterable=None, **kwargs):
     if c.use_ray:
         return iterable
     else:
-        return tqdm.tqdm(iterable, kwargs)
+        return tqdm.tqdm(iterable=iterable, **kwargs)
