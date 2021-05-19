@@ -171,10 +171,16 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     if train_on_gpu:
                         lbls = lbls.cuda()
                     tasks_out = tasks_out.squeeze().T
+                    # print(tasks_out)
+                    # print('\n----\n')
+                    # print(lbls)
                     task_loss = criterion(tasks_out, lbls)
 
                     predicted = torch.argmax(tasks_out, dim=1)
                     accuracy = torch.sum(predicted == aug_labels).type(torch.float) / aug_labels.shape[0]
+
+                    task_loss.backward()
+                    optimizer.step()
 
                     total_loss = utils.assign(total_loss, task_loss)
                     total_accuracy = utils.assign(total_accuracy, accuracy)
@@ -185,8 +191,8 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                 if total_loss is None:
                     print('skipping too small batch')
                     continue
-                total_loss.backward()
-                optimizer.step()
+                # total_loss.backward()
+                # optimizer.step()
                 total_loss = total_loss / len(labels)
                 total_accuracy = total_accuracy / len(labels)
                 # update training loss
