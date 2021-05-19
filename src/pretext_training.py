@@ -94,7 +94,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
         torch.save(t.state_dict(), f'{path_to_model}/task_head_{i}.pt')
 
 
-def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs):
+def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=True):
     p = PretextParams()
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
@@ -115,7 +115,7 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs)
         criterion = criterion.cuda()
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
-    train_pretext(model, optimizer, criterion, train_on_gpu, p)
+    train_pretext(model, optimizer, criterion, train_on_gpu, p, use_tune=use_tune)
 
 
 def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams, use_tune=True):
