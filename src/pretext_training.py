@@ -163,7 +163,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                 total_accuracy = None
                 for aug_data, aug_labels in zip(data, labels):
                     if aug_data.shape[0] != p.batch_size:
-                        print('skipping too small batch')
+                        #print('skipping too small batch')
                         continue  # if not full batch, just continue
                     if train_on_gpu:
                         aug_data = aug_data.cuda()
@@ -194,7 +194,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     else:
                         total_loss += task_loss
                 if total_loss is None:
-                    print('skipping too small batch')
+                    #print('skipping too small batch')
                     continue
                 # total_loss.backward()
                 # optimizer.step()
