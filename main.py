@@ -6,9 +6,9 @@ import src.tests.ecgcnn_basic_tests as ecgcnn_tests
 from src.constants import Constants as c
 
 run_tests = False
-run_hyperparam = False
-pre_train_single = True
-fine_tune_single =True
+run_hyperparam = True
+pre_train_single = False
+fine_tune_single =False
 run_example = True
 
 if __name__ == '__main__':
