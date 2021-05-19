@@ -171,7 +171,9 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     if len(aug_data.shape) == 2:
                         aug_data = aug_data.unsqueeze(axis=1).float()
                     # clear the gradients of all optimized variables
-                    optimizer.zero_grad()
+                    for param in model.parameters():
+                        param.grad = None
+                    # optimizer.zero_grad()
                     tasks_out, _ = model(aug_data)
                     lbls = ltv(aug_labels)
                     if train_on_gpu:
