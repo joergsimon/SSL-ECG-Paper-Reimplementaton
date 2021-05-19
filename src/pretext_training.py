@@ -29,6 +29,14 @@ class PretextParams:
     test_size = 0.1
 
 
+good_params_for_single_run = {
+    "pretext": {
+        "batch_size": 16,
+        "adam": {"lr": 0.000128268}
+    }
+}
+
+
 def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
     config = {
         "pretext": {
@@ -111,14 +119,8 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, **kwargs)
     train_pretext(model, optimizer, criterion, train_on_gpu, p)
 
 
-def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams):
-    # dataset_array = []
-    # for ds_type in d.ds_to_constructor.keys():
-    #     ds_obj = d.ds_to_constructor[ds_type](d.DataConstants.basepath)
-    #     dataset_array.append(ds_obj)
-    # dataset = torch.utils.data.ConcatDataset(dataset_array)
+def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams, use_tune=True):
     dataset = dta.CombinedECGDatasets(dta.ds_to_constructor.keys(), dta.DataConstants.basepath)
-    # dataset = amigos.ECGAmigosCachedWindowsDataset(d.DataConstants.basepath)
     dataset = dta.AugmentationsPretextDataset(dataset, dta.AugmentationsPretextDataset.STD_AUG)
 
     num_train = len(dataset)
@@ -220,15 +222,16 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
         print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:.3f}'.format(
             e, train_loss, valid_loss, train_accuracy, valid_accuracy))
 
-        # Here we save a checkpoint. It is automatically registered with
-        # Ray Tune and will potentially be passed as the `checkpoint_dir`
-        # parameter in future iterations.
-        with tune.checkpoint_dir(step=e) as checkpoint_dir:
-            path = os.path.join(checkpoint_dir, "checkpoint")
-            torch.save(
-                (model.state_dict(), optimizer.state_dict()), path)
+        if use_tune:
+            # Here we save a checkpoint. It is automatically registered with
+            # Ray Tune and will potentially be passed as the `checkpoint_dir`
+            # parameter in future iterations.
+            with tune.checkpoint_dir(step=e) as checkpoint_dir:
+                path = os.path.join(checkpoint_dir, "checkpoint")
+                torch.save(
+                    (model.state_dict(), optimizer.state_dict()), path)
 
-        tune.report(loss=valid_loss, accuracy=valid_accuracy)
+            tune.report(loss=valid_loss, accuracy=valid_accuracy)
 
         # save model if validation loss has decreased
         if valid_loss <= valid_loss_min:
