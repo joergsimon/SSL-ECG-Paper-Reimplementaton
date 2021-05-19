@@ -179,9 +179,6 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     if train_on_gpu:
                         lbls = lbls.cuda()
                     tasks_out = tasks_out.squeeze().T
-                    # print(tasks_out)
-                    # print('\n----\n')
-                    # print(lbls)
                     task_loss = criterion(tasks_out, lbls)
 
                     predicted = torch.argmax(tasks_out, dim=1)
