@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-import tqdm
 from ray import tune
 from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader
@@ -143,7 +142,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
 
     ltv = partial(labels_to_vec, n_tasks=len(dataset.augmentations) + 1, debug_ltv=False)  # just a shortcut
 
-    for e in tqdm.tqdm(range(p.epochs)):
+    for e in utils.pbar(range(p.epochs)):
 
         train_loss = 0.0
         valid_loss = 0.0
@@ -153,7 +152,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
 
         def iterate_batches(loader, loss_type):
             nonlocal train_loss, valid_loss, valid_accuracy, train_accuracy
-            for i_batch, (data, labels) in enumerate(tqdm.tqdm(loader, leave=False)):
+            for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
                 total_loss = None
                 total_accuracy = None
                 for aug_data, aug_labels in zip(data, labels):

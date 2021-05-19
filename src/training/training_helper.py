@@ -1,4 +1,3 @@
-import tqdm
 import numpy as np
 import src.utils as utils
 
@@ -6,7 +5,7 @@ import src.utils as utils
 def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_loss):
     total_loss = None
     total_accuracy = None
-    for i_batch, (data, labels) in enumerate(tqdm.tqdm(loader, leave=False)):
+    for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
         if data.shape[0] != batch_size:
             print('skipping too small batch')
             continue  # if not full batch, just continue
@@ -26,7 +25,7 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
 def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu: bool):
     valid_loss_min = np.Inf  # track change in validation loss
 
-    for e in tqdm.tqdm(range(epochs)):
+    for e in utils.pbar(range(epochs)):
 
         train_loss = 0.0
         valid_loss = 0.0
