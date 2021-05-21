@@ -16,6 +16,7 @@ import src.data as dta
 import src.utils as utils
 from src.constants import Constants as c
 from src.model import EcgNetwork, labels_to_vec
+import src.augmentations as aug
 
 path_to_model: str = c.model_base_path
 
@@ -96,10 +97,10 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
         torch.save(t.state_dict(), f'{path_to_model}/task_head_{i}.pt')
 
 
-def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=True):
+def train_pretext_full_config(hyperparams_config, aug_type: aug.AugmentationTypes, checkpoint_dir=None, use_tune=True):
     p = PretextParams()
     p.batch_size = hyperparams_config['pretext']['batch_size']
-    model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
+    model = EcgNetwork(1, 5)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
@@ -117,16 +118,17 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
         criterion = criterion.cuda()
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
-    train_pretext(model, optimizer, criterion, train_on_gpu, p, use_tune=use_tune)
+    train_pretext(model, optimizer, criterion, aug_type, train_on_gpu, p, use_tune=use_tune)
 
 
-def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams, use_tune=True):
+def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, train_on_gpu: bool, p: PretextParams, use_tune=True):
 
     # we have convolutions here so allow the automatic optimization to ramp it up
     torch.backends.cudnn.benchmark = True
 
+    augs = dta.AugmentationsPretextDataset.filter_augs([aug_type])
     dataset = dta.CombinedECGDatasets(dta.ds_to_constructor.keys(), dta.DataConstants.basepath)
-    dataset = dta.AugmentationsPretextDataset(dataset, dta.AugmentationsPretextDataset.STD_AUG)
+    dataset = dta.AugmentationsPretextDataset(dataset, augs)
 
     num_train = len(dataset)
     indices = list(range(num_train))
@@ -145,8 +147,6 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                              sampler=test_sampeler, num_workers=p.num_workers)
 
     valid_loss_min = np.Inf  # track change in validation loss
-
-    ltv = partial(labels_to_vec, n_tasks=len(dataset.augmentations) + 1, debug_ltv=False)  # just a shortcut
 
     for e in utils.pbar(range(p.epochs)):
 
@@ -174,15 +174,28 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                     for param in model.parameters():
                         param.grad = None
                     # optimizer.zero_grad()
+
                     tasks_out, _ = model(aug_data)
-                    lbls = ltv(aug_labels)
+                    lbls = (aug_labels != 0).type(torch.float) # True if augmentation, False if not
                     if train_on_gpu:
                         lbls = lbls.cuda()
                     tasks_out = tasks_out.squeeze().T
                     task_loss = criterion(tasks_out, lbls)
 
-                    predicted = torch.argmax(tasks_out, dim=1)
-                    accuracy = torch.sum(predicted == aug_labels).type(torch.float) / aug_labels.shape[0]
+                    predicted = (tasks_out > 0.5).type(torch.int)
+                    accuracy = torch.sum(predicted == lbls.type(torch.int)).type(torch.float) / aug_labels.shape[0]
+
+                    # print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+                    # print(tasks_out)
+                    # print("\n----------------\n")
+                    # print(aug_labels)
+                    # print("\n----------------\n")
+                    # print(lbls)
+                    # print("\n----------------\n")
+                    # print(predicted)
+                    # print("\n----------------\n")
+                    # print(accuracy)
+                    # print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
                     task_loss.backward()
                     optimizer.step()

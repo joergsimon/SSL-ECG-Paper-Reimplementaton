@@ -84,13 +84,21 @@ class AugmentationsPretextDataset(Dataset):
         (aug.AugmentationTypes.TIME_WRAP, partial(aug.time_warp, n_sections=5, k=2))
     ]
 
+    @staticmethod
+    def filter_augs(aug_types: List[aug.AugmentationTypes]) -> List:
+        res = []
+        for entry in AugmentationsPretextDataset.STD_AUG:
+            if entry[0] in aug_types:
+                res.append(entry)
+        return res
+
     def __init__(self, dataset: Dataset, augmentations):
         super(AugmentationsPretextDataset, self).__init__()
         self.dataset = dataset
         self.augmentations = augmentations
 
     def __len__(self):
-        return len(self.dataset) * len(self.augmentations)
+        return len(self.dataset)# * len(self.augmentations)
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
@@ -111,7 +119,7 @@ class AugmentationsPretextDataset(Dataset):
         return self.get_item(idx)
 
     def get_item(self, idx):
-        real_idx = idx // len(self.augmentations)
+        real_idx = idx# // len(self.augmentations)
         #print(f'fetching data for augmentation at {idx} (real idx: {real_idx}) for pretext')
         data = self.dataset[real_idx]
         sample, label = data

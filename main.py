@@ -1,15 +1,18 @@
 import src.data as data
 import src.finetune_to_target as ftt
 import src.pretext_training as pt
+import src.pretext_train_one_clf as ptoc
 import src.run_example as re
 import src.tests.ecgcnn_basic_tests as ecgcnn_tests
 from src.constants import Constants as c
+import src.augmentations as aug
 
 run_tests = False
 run_hyperparam = False
-pre_train_single = True
-fine_tune_single =True
-run_example = True
+pre_train_single_augmentation = True
+pre_train_single = False
+fine_tune_single =False
+run_example = False
 
 if __name__ == '__main__':
     if run_hyperparam:
@@ -17,6 +20,8 @@ if __name__ == '__main__':
         ftt.train_finetune_tune_task(data.DataSets.AMIGOS, 'test_123')
     else:
         c.use_ray = False
+    if pre_train_single_augmentation:
+        ptoc.train_pretext_full_config(pt.good_params_for_single_run, aug.AugmentationTypes.NEGATE, use_tune=False)
     if pre_train_single:
         pt.train_pretext_full_config(pt.good_params_for_single_run, use_tune=False)
     if fine_tune_single:
