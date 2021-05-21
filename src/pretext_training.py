@@ -189,10 +189,6 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
 
                     total_loss = utils.assign(total_loss, task_loss)
                     total_accuracy = utils.assign(total_accuracy, accuracy)
-                    if total_loss is None:
-                        total_loss = task_loss
-                    else:
-                        total_loss += task_loss
                 if total_loss is None:
                     #print('skipping too small batch')
                     continue
@@ -201,13 +197,14 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
                 total_loss = total_loss / len(labels)
                 total_accuracy = total_accuracy / len(labels)
                 # update training loss
-                l = total_loss.item() * len(data) * data[0].size(0)
+                l = total_loss.item()
+                a = total_accuracy.item()
                 if loss_type == 'valid':
                     valid_loss += l
-                    valid_accuracy += total_accuracy
+                    valid_accuracy += a
                 else:
                     train_loss += l
-                    train_accuracy += total_accuracy
+                    train_accuracy += a
 
         ###################
         # train the model #
@@ -222,11 +219,11 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
         iterate_batches(valid_loader, 'valid')
 
         # calculate average losses
-        train_loss = train_loss / len(train_loader.sampler)
-        valid_loss = valid_loss / len(valid_loader.sampler)
+        train_loss = train_loss / len(train_loader)
+        valid_loss = valid_loss / len(valid_loader)
 
-        train_accuracy = train_accuracy / len(train_loader.sampler)
-        valid_accuracy = valid_accuracy / len(valid_loader.sampler)
+        train_accuracy = train_accuracy / len(train_loader)
+        valid_accuracy = valid_accuracy / len(valid_loader)
 
         # print training/validation statistics
         print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:.3f}'.format(
