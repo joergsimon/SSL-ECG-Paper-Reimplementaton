@@ -108,7 +108,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
     model = ecg_net.emotion_head
     embedder = ecg_net.cnn
     device = 'cuda' if train_on_gpu else 'cpu'
-    state_dict = torch.load(f'{path_to_src_model}/model_embedding.pt', map_location=torch.device(device))
+    state_dict = torch.load(f'{path_to_src_model}model_embedding.pt', map_location=torch.device(device))
     embedder.load_state_dict(state_dict)
     for p in embedder.parameters():
         p.requires_grad = False
@@ -173,4 +173,4 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
     def save_model():
         torch.save(model.state_dict(), f'{basepath_to_tuned_model}tuned_for_{target_id}.pt')
 
-    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, device)
+    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu)
