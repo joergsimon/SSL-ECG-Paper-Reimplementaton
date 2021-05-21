@@ -157,7 +157,7 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
         valid_accuracy = 0.0
 
         def iterate_batches(loader, loss_type):
-            nonlocal train_loss, valid_loss, valid_accuracy, train_accuracy, acc_test
+            nonlocal train_loss, valid_loss, valid_accuracy, train_accuracy
             for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
                 total_loss = None
                 total_accuracy = None
