@@ -205,16 +205,16 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
                 if total_loss is None:
                     #print('skipping too small batch')
                     continue
-                # total_loss.backward()
-                # optimizer.step()
+                total_loss.backward()
+                optimizer.step()
                 total_loss = total_loss / len(labels)
                 total_accuracy = total_accuracy / len(labels)
                 # update training loss
                 l = total_loss.item()
                 a = total_accuracy.item()
 
-                print(total_loss, l)
-                print(total_accuracy, a)
+                # print(total_loss, l)
+                # print(total_accuracy, a)
                 if loss_type == 'valid':
                     valid_loss += l
                     valid_accuracy += a
