@@ -213,8 +213,6 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
                 l = total_loss.item()
                 a = total_accuracy.item()
 
-                # print(total_loss, l)
-                # print(total_accuracy, a)
                 if loss_type == 'valid':
                     valid_loss += l
                     valid_accuracy += a
