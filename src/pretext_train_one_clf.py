@@ -155,9 +155,10 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
 
         train_accuracy = 0.0
         valid_accuracy = 0.0
+        acc_test = []
 
         def iterate_batches(loader, loss_type):
-            nonlocal train_loss, valid_loss, valid_accuracy, train_accuracy
+            nonlocal train_loss, valid_loss, valid_accuracy, train_accuracy, acc_test
             for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
                 total_loss = None
                 total_accuracy = None
@@ -212,6 +213,7 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
                 # update training loss
                 l = total_loss.item() * data[0].size(0)
                 a = total_accuracy.item()
+                acc_test.append(a)
 
                 # print(total_loss, l)
                 # print(total_accuracy, a)
@@ -240,6 +242,9 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
 
         print(train_accuracy, train_accuracy / len(train_loader.sampler), len(train_loader.sampler))
         print(valid_accuracy, valid_accuracy / len(valid_loader.sampler), len(valid_loader.sampler))
+        acc_test = np.array(acc_test)
+        print(acc_test[:10], acc_test[-10:])
+        print(acc_test.mean())
         train_accuracy = train_accuracy / len(train_loader.sampler)
         valid_accuracy = valid_accuracy / len(valid_loader.sampler)
 
