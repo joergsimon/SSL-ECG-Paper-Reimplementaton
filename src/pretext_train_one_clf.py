@@ -211,7 +211,7 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
                 total_loss = total_loss / len(labels)
                 total_accuracy = total_accuracy / len(labels)
                 # update training loss
-                l = total_loss.item() * data[0].size(0)
+                l = total_loss.item()
                 a = total_accuracy.item()
                 acc_test.append(a)
 
@@ -237,16 +237,16 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
         iterate_batches(valid_loader, 'valid')
 
         # calculate average losses
-        train_loss = train_loss / len(train_loader.sampler)
-        valid_loss = valid_loss / len(valid_loader.sampler)
+        train_loss = train_loss / len(train_loader)
+        valid_loss = valid_loss / len(valid_loader)
 
-        print(train_accuracy, train_accuracy / len(train_loader.sampler), len(train_loader.sampler))
-        print(valid_accuracy, valid_accuracy / len(valid_loader.sampler), len(valid_loader.sampler))
+        print(train_accuracy, train_accuracy / len(train_loader), len(train_loader))
+        print(valid_accuracy, valid_accuracy / len(valid_loader), len(valid_loader))
         acc_test = np.array(acc_test)
         print(acc_test[:10], acc_test[-10:])
         print(acc_test.mean())
-        train_accuracy = train_accuracy / len(train_loader.sampler)
-        valid_accuracy = valid_accuracy / len(valid_loader.sampler)
+        train_accuracy = train_accuracy / len(train_loader)
+        valid_accuracy = valid_accuracy / len(valid_loader)
 
         # print training/validation statistics
         print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:.3f}'.format(
