@@ -9,8 +9,8 @@ import src.augmentations as aug
 
 run_tests = False
 run_hyperparam = False
-pre_train_single_augmentation = True
-pre_train_single = False
+pre_train_single_augmentation = False
+pre_train_single = True
 fine_tune_single =False
 run_example = False
 
