@@ -202,10 +202,6 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
 
                     total_loss = utils.assign(total_loss, task_loss)
                     total_accuracy = utils.assign(total_accuracy, accuracy)
-                    if total_loss is None:
-                        total_loss = task_loss
-                    else:
-                        total_loss += task_loss
                 if total_loss is None:
                     #print('skipping too small batch')
                     continue
@@ -214,13 +210,17 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
                 total_loss = total_loss / len(labels)
                 total_accuracy = total_accuracy / len(labels)
                 # update training loss
-                l = total_loss.item() * len(data) * data[0].size(0)
+                l = total_loss.item() * data[0].size(0)
+                a = total_accuracy.item()
+
+                # print(total_loss, l)
+                # print(total_accuracy, a)
                 if loss_type == 'valid':
                     valid_loss += l
-                    valid_accuracy += total_accuracy
+                    valid_accuracy += a
                 else:
                     train_loss += l
-                    train_accuracy += total_accuracy
+                    train_accuracy += a
 
         ###################
         # train the model #
