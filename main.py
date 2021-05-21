@@ -21,7 +21,7 @@ if __name__ == '__main__':
     else:
         c.use_ray = False
     if pre_train_single_augmentation:
-        ptoc.train_pretext_full_config(pt.good_params_for_single_run, aug.AugmentationTypes.TEMP_INV, use_tune=False)
+        ptoc.train_pretext_full_config(pt.good_params_for_single_run, aug.AugmentationTypes.PERMUTATE, use_tune=False)
     if pre_train_single:
         pt.train_pretext_full_config(pt.good_params_for_single_run, use_tune=False)
     if fine_tune_single:
