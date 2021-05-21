@@ -238,7 +238,7 @@ def train_pretext(model, optimizer, criterion, aug_type: aug.AugmentationTypes, 
         train_loss = train_loss / len(train_loader.sampler)
         valid_loss = valid_loss / len(valid_loader.sampler)
 
-        print(train_accuracy, train_accuracy / len(train_accuracy.sampler), len(train_accuracy.sampler))
+        print(train_accuracy, train_accuracy / len(train_loader.sampler), len(train_loader.sampler))
         print(valid_accuracy, valid_accuracy / len(valid_loader.sampler), len(valid_loader.sampler))
         train_accuracy = train_accuracy / len(train_loader.sampler)
         valid_accuracy = valid_accuracy / len(valid_loader.sampler)
