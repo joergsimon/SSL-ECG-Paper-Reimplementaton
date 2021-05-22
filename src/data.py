@@ -194,6 +194,9 @@ class EmbeddingsDataset(Dataset):
         data = data.reshape((1, 1, data.shape[0]))
         data = torch.from_numpy(data).float()
         if self.train_on_gpu:
+            print(data)
+            print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+            print(label)
             data, label = data.cuda(), label.cuda()
         emb = self.embedding_network(data)
         return emb, label
