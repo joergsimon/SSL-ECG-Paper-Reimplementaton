@@ -15,8 +15,8 @@ import src.utils as utils
 from src.constants import Constants as c
 from src.model import EcgNetwork
 
-path_to_src_model: str = c.cache_base_path
-basepath_to_tuned_model: str = c.cache_base_path + "tuned/"
+path_to_src_model: str = c.model_base_path
+basepath_to_tuned_model: str = c.model_base_path + "tuned/"
 
 
 @dataclass
