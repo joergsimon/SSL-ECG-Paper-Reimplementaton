@@ -146,11 +146,11 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
 
     # prepare data loaders (combine dataset and sampler)
     train_loader = DataLoader(dataset, batch_size=p.batch_size,
-                              sampler=train_sampler, num_workers=p.num_workers)
+                              sampler=train_sampler, num_workers=0)
     valid_loader = DataLoader(dataset, batch_size=p.batch_size,
-                              sampler=valid_sampler, num_workers=p.num_workers)
+                              sampler=valid_sampler, num_workers=0)
     test_loader = DataLoader(dataset, batch_size=p.batch_size,
-                             sampler=test_sampeler, num_workers=p.num_workers)
+                             sampler=test_sampeler, num_workers=0)
 
     def compute_loss_and_accuracy(data, labels):
         l_prime = model(data).squeeze()
