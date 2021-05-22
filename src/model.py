@@ -87,7 +87,7 @@ class EcgHead(nn.Module):
         self.head_1 = nn.Linear(128, 128)
         self.head_2 = nn.Linear(128, n_out)
         self.dropout = nn.Dropout(drop_rate)
-        self.out_activation = torch.sigmoid# if n_out == 1 else nn.LogSoftmax(dim=1)
+        self.out_activation = torch.sigmoid if n_out == 1 else nn.LogSoftmax(dim=1)
 
         self.debug_dim = False
 
