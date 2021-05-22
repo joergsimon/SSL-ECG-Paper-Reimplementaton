@@ -155,6 +155,9 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
     def compute_loss_and_accuracy(data, labels):
         l_prime = model(data).squeeze()
         # for now, we just try to predict valance
+        print(labels.shape)
+        print("ooo")
+        print(labels)
         valances = labels[0]
         valances[valances != valances] = 0 # remove nans
         valances = valances.type(torch.LongTensor) # we quantisize
