@@ -201,7 +201,8 @@ class EmbeddingsDataset(Dataset):
     def get_cached_item(self, idx):
         # else we assume it is a single index so:
         with open(f'{self.total_cache_path}window-{idx}.data.pt', 'rb') as f:
-            sample = torch.load(f)
+            device = 'cuda' if self.train_on_gpu else 'cpu'
+            sample = torch.load(f, map_location=torch.device(device))
         with open(f'{self.total_cache_path}window-{idx}.label.npy', 'rb') as f:
             labels = pickle.load(f)
         return sample, labels
