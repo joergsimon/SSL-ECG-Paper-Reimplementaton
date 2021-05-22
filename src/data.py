@@ -161,8 +161,8 @@ class EmbeddingsDataset(Dataset):
     def save_window_to_cache(self, path_to_cache, window, window_label, identifier):
         with open(f'{path_to_cache}window-{identifier}.data.pt', 'wb') as f:
             torch.save(window, f)
-        with open(f'{path_to_cache}window-{identifier}.label.npy', 'wb') as f:
-            pickle.dump(window_label, f)
+        with open(f'{path_to_cache}window-{identifier}.label.pt', 'wb') as f:
+            torch.save(window_label, f)
 
     def __len__(self):
         return len(self.base_dataset)
@@ -193,16 +193,17 @@ class EmbeddingsDataset(Dataset):
         data, label = self.base_dataset[idx]
         data = data.reshape((1, 1, data.shape[0]))
         data = torch.from_numpy(data).float()
+        label = torch.tensor(label)
         if self.train_on_gpu:
-            data = data.cuda()
+            data, label = data.cuda(), label.cuda()
         emb = self.embedding_network(data)
         return emb, label
 
     def get_cached_item(self, idx):
         # else we assume it is a single index so:
+        device = 'cuda' if self.train_on_gpu else 'cpu'
         with open(f'{self.total_cache_path}window-{idx}.data.pt', 'rb') as f:
-            device = 'cuda' if self.train_on_gpu else 'cpu'
             sample = torch.load(f, map_location=torch.device(device))
-        with open(f'{self.total_cache_path}window-{idx}.label.npy', 'rb') as f:
-            labels = pickle.load(f)
+        with open(f'{self.total_cache_path}window-{idx}.label.pt', 'rb') as f:
+            labels = torch.load(f, map_location=torch.device(device))
         return sample, labels
