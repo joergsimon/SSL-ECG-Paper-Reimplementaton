@@ -140,7 +140,7 @@ class AugmentationsPretextDataset(Dataset):
 
 class EmbeddingsDataset(Dataset):
 
-    path_to_cache = '/Users/joergsimon/Documents/phd/HELENA/ssl-ecg/cache/'
+    path_to_cache = c.cache_base_path
     
     def __init__(self, embedding_network, base_dataset, should_cache, path_to_cache, chache_identifier, train_on_gpu: bool):
         super(EmbeddingsDataset, self).__init__()
