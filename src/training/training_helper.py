@@ -50,11 +50,11 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         valid_accuracy += a
 
         # calculate average losses
-        train_loss = train_loss / len(train_loader.sampler)
-        valid_loss = valid_loss / len(valid_loader.sampler)
+        train_loss = train_loss / len(train_loader)
+        valid_loss = valid_loss / len(valid_loader)
 
-        train_accuracy = train_accuracy / len(train_loader.sampler)
-        valid_accuracy = valid_accuracy / len(train_loader.sampler)
+        train_accuracy = train_accuracy / len(train_loader)
+        valid_accuracy = valid_accuracy / len(train_loader)
 
         # print training/validation statistics
         print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:.3f}'.format(
