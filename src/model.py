@@ -94,24 +94,24 @@ class EcgHead(nn.Module):
 
     def forward(self, x):
         if self.debug_values:
-            print(x)
+            print('input', x)
         x = self.head_1(x)
         if self.debug_values:
-            print(x)
+            print('after head1', x)
         x = F.leaky_relu(x)
         if self.debug_values:
-            print(x)
+            print('after leaky relu', x)
         x = self.dropout(x)
         if self.debug_values:
-            print(x)
+            print('after dropout', x)
         x = self.head_2(x)
         if self.debug_values:
-            print(x)
+            print('after head two', x)
         if self.debug_dim:
             print('head before activation', x.shape)
         x = self.out_activation(x)
         if self.debug_values:
-            print(x)
+            print('after activation', x)
         if self.debug_dim:
             print('head after activation', x.shape)
         return x
