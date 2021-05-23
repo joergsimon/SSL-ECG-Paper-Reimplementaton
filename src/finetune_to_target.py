@@ -60,14 +60,23 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
 
     dfs = result.trial_dataframes
     if len(dfs) > 0:
-        if 'mean_accuracy' in dfs[0].columns:
+        if 'accuracy' in dfs[0].columns:
             ax = None  # This plots everything on the same plot
             for d in dfs.values():
-                if 'mean_accuracy' in d.columns:
-                    ax = d.mean_accuracy.plot(ax=ax, legend=False)
+                if 'accuracy' in d.columns:
+                    ax = d.accuracy.plot(ax=ax, legend=False)
             ax.set_xlabel("Epochs")
-            ax.set_ylabel("Mean Accuracy")
-            plt.savefig('overview-pretext.png')
+            ax.set_ylabel("Accuracy")
+            plt.savefig('overview-accuracy-finetuning.png')
+            plt.show()
+        if 'loss' in dfs[0].columns:
+            ax = None  # This plots everything on the same plot
+            for d in dfs.values():
+                if 'loss' in d.columns:
+                    ax = d.accuracy.plot(ax=ax, legend=False)
+            ax.set_xlabel("Epochs")
+            ax.set_ylabel("loss")
+            plt.savefig('overview-loss-finetuning.png')
             plt.show()
 
     best_trial = result.get_best_trial("loss", "min", "last")
