@@ -96,7 +96,7 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
     torch.save(best_trained_model.state_dict(), f'{basepath_to_tuned_model}tuned_for_{target_id}.pt')
 
 
-def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, target_dataset: dta.DataSets=[], target_id=None):
+def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, target_dataset: dta.DataSets=[], target_id=None, use_tune=True):
     default_params = TuningParams()
     default_params.batch_size = hyperparams_config['finetune']['batch_size']
     train_on_gpu = torch.cuda.is_available()
@@ -132,10 +132,10 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
         criterion = criterion.cuda()
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
-    finetune(model, optimizer, criterion, dataset, train_on_gpu, default_params, target_id)
+    finetune(model, optimizer, criterion, dataset, train_on_gpu, default_params, target_id, use_tune)
 
 
-def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: TuningParams, target_id):
+def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: TuningParams, target_id, use_tune: bool):
 
     num_train = len(dataset)
     indices = list(range(num_train))
@@ -182,4 +182,4 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
     def save_model():
         torch.save(model.state_dict(), f'{basepath_to_tuned_model}tuned_for_{target_id}.pt')
 
-    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu)
+    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu, use_tune)

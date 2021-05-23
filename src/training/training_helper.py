@@ -1,5 +1,8 @@
 import numpy as np
 import src.utils as utils
+import torch
+from ray import tune
+import os.path
 
 
 def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_loss):
@@ -22,7 +25,7 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
     return l, a
 
 
-def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu: bool):
+def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu: bool, use_tune:bool):
     valid_loss_min = np.Inf  # track change in validation loss
 
     for e in utils.pbar(range(epochs)):
@@ -59,6 +62,17 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # print training/validation statistics
         print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:.3f}'.format(
             e, train_loss, valid_loss, train_accuracy, valid_accuracy))
+
+        if use_tune:
+            # Here we save a checkpoint. It is automatically registered with
+            # Ray Tune and will potentially be passed as the `checkpoint_dir`
+            # parameter in future iterations.
+            with tune.checkpoint_dir(step=e) as checkpoint_dir:
+                path = os.path.join(checkpoint_dir, "checkpoint")
+                torch.save(
+                    (model.state_dict(), optimizer.state_dict()), path)
+
+            tune.report(loss=valid_loss, accuracy=valid_accuracy)
 
         # save model if validation loss has decreased
         if valid_loss <= valid_loss_min:
