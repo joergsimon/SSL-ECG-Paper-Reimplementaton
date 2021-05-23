@@ -87,7 +87,7 @@ class EcgHead(nn.Module):
         self.head_1 = nn.Linear(128, 128)
         self.head_2 = nn.Linear(128, n_out)
         self.dropout = nn.Dropout(drop_rate)
-        self.out_activation = torch.sigmoid if n_out == 1 else nn.LogSoftmax(dim=1)
+        self.out_activation = torch.sigmoid if n_out == 1 else None
 
         self.debug_dim = False
         self.debug_values = False
@@ -103,7 +103,8 @@ class EcgHead(nn.Module):
             print('head before activation', x.shape)
         if self.debug_values:
             print('before last activation', x)
-        x = self.out_activation(x)
+        if self.out_activation is not None:
+            x = self.out_activation(x)
         if self.debug_values:
             print('after last activation', x)
         if self.debug_dim:

@@ -116,7 +116,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
 
     dataset = dta.EmbeddingsDataset(embedder, dataset, True, dta.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['finetune']['adam']['lr'])
-    criterion = nn.NLLLoss()
+    criterion = nn.CrossEntropyLoss()
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
     # should be restored.
