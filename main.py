@@ -8,10 +8,10 @@ from src.constants import Constants as c
 import src.augmentations as aug
 
 run_tests = False
-run_hyperparam = False
+run_hyperparam = True
 pre_train_single_augmentation = False
 pre_train_single = False
-fine_tune_single =True
+fine_tune_single =False
 run_example = False
 
 if __name__ == '__main__':
