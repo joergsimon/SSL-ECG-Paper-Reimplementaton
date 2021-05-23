@@ -130,8 +130,8 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
     if train_on_gpu:
         model = model.cuda()
         criterion = criterion.cuda()
-        # if torch.cuda.device_count() > 1:
-        #     model = nn.DataParallel(model)
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
     finetune(model, optimizer, criterion, dataset, train_on_gpu, default_params, target_id)
 
 
@@ -176,11 +176,7 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
         #print('loss', loss)
 
         predicted = torch.argmax(l_prime, dim=1)
-        print(predicted)
-        print(valances)
         accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
-        print(torch.sum(predicted == valances).type(torch.float))
-        print(accuracy)
         return loss, accuracy
 
     def save_model():
