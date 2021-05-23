@@ -167,6 +167,8 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
             print(labels[0])
             print(valances)
             valances[valances < 0] = 0
+        print(l_prime)
+        print(valances)
         loss = criterion(l_prime, valances)
 
         predicted = torch.argmax(l_prime, dim=1)
