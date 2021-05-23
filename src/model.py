@@ -101,9 +101,11 @@ class EcgHead(nn.Module):
         x = self.head_2(x)
         if self.debug_dim:
             print('head before activation', x.shape)
+        if self.debug_values:
+            print('before last activation', x)
         x = self.out_activation(x)
         if self.debug_values:
-            print('after activation', x)
+            print('after last activation', x)
         if self.debug_dim:
             print('head after activation', x.shape)
         return x
