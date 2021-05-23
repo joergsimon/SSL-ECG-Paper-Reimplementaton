@@ -176,7 +176,11 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
         #print('loss', loss)
 
         predicted = torch.argmax(l_prime, dim=1)
+        print(predicted)
+        print(valances)
         accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
+        print(torch.sum(predicted == valances).type(torch.float))
+        print(accuracy)
         return loss, accuracy
 
     def save_model():
