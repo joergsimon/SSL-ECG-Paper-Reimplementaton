@@ -39,7 +39,7 @@ good_params_for_single_run = {
 def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
     config = {
         "finetune": {
-            "batch_size": tune.choice([8, 16, 32]),
+            "batch_size": tune.choice([8, 16, 32, 64, 128]),
             "adam": {"lr": tune.loguniform(1e-4, 1e-1)}
         }
     }
