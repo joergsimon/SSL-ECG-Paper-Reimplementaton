@@ -7,7 +7,7 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
     total_accuracy = None
     for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
         if data.shape[0] != batch_size:
-            print('skipping too small batch')
+            #print('skipping too small batch')
             continue  # if not full batch, just continue
         if train_on_gpu:
             data, labels = data.cuda(), labels.cuda()
