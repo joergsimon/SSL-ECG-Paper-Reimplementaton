@@ -90,15 +90,28 @@ class EcgHead(nn.Module):
         self.out_activation = torch.sigmoid if n_out == 1 else nn.LogSoftmax(dim=1)
 
         self.debug_dim = False
+        self.debug_values = False
 
     def forward(self, x):
+        if self.debug_values:
+            print(x)
         x = self.head_1(x)
+        if self.debug_values:
+            print(x)
         x = F.leaky_relu(x)
+        if self.debug_values:
+            print(x)
         x = self.dropout(x)
+        if self.debug_values:
+            print(x)
         x = self.head_2(x)
+        if self.debug_values:
+            print(x)
         if self.debug_dim:
             print('head before activation', x.shape)
         x = self.out_activation(x)
+        if self.debug_values:
+            print(x)
         if self.debug_dim:
             print('head after activation', x.shape)
         return x

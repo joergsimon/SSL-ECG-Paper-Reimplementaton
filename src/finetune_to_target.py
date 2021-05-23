@@ -152,6 +152,9 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
     test_loader = DataLoader(dataset, batch_size=p.batch_size,
                              sampler=test_sampeler, num_workers=0)
 
+    print(model)
+    model.debug_values = True
+
     def compute_loss_and_accuracy(data, labels):
         l_prime = model(data).squeeze()
         # for now, we just try to predict valance
