@@ -106,7 +106,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
     does_not_matter = len(dta.AugmentationsPretextDataset.STD_AUG) + 1
     ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
     model = ecg_net.emotion_head
-    model.debug_values = True
+    model.debug_values = False
     embedder = ecg_net.cnn
     device = 'cuda' if train_on_gpu else 'cpu'
     state_dict = torch.load(f'{path_to_src_model}model_embedding.pt', map_location=torch.device(device))
