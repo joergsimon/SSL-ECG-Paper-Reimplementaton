@@ -63,7 +63,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
 
     dfs = result.trial_dataframes
     if len(dfs) > 0:
-        if 'accuracy' in dfs[0].columns:
+        if 'accuracy' in dfs.values[0].columns:
             ax = None  # This plots everything on the same plot
             for d in dfs.values():
                 if 'accuracy' in d.columns:
@@ -72,11 +72,11 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0
             ax.set_ylabel("Accuracy")
             plt.savefig('overview-accuracy-pretext.png')
             plt.show()
-        if 'loss' in dfs[0].columns:
+        if 'loss' in dfs.values[0].columns:
             ax = None  # This plots everything on the same plot
             for d in dfs.values():
                 if 'loss' in d.columns:
-                    ax = d.accuracy.plot(ax=ax, legend=False)
+                    ax = d.loss.plot(ax=ax, legend=False)
             ax.set_xlabel("Epochs")
             ax.set_ylabel("loss")
             plt.savefig('overview-loss-pretext.png')
