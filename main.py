@@ -8,8 +8,8 @@ from src.constants import Constants as c
 import src.augmentations as aug
 
 run_tests = False
-run_pretrain_hyperparams = False
-pre_train_single_augmentation = True
+run_pretrain_hyperparams = True
+pre_train_single_augmentation = False
 run_finetune_hyperparams = True
 pre_train_single = False
 fine_tune_single = False
