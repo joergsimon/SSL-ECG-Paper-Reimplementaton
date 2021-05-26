@@ -122,7 +122,8 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
         model.load_state_dict(model_state)
         optimizer.load_state_dict(optimizer_state)
 
-    criterion = nn.BCELoss()
+    pos_weight = torch.tensor([0.195, 0.195, 0.195, 0.0125, 0.0125, 0.195, 0.195])
+    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
     train_on_gpu = torch.cuda.is_available()
     if train_on_gpu:
         model = model.cuda()
