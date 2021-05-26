@@ -24,7 +24,7 @@ path_to_model: str = c.model_base_path
 class PretextParams:
     batch_size:int = 32  # don't forget we get all the agumentations per example
     num_workers:int = 3
-    epochs:int = 200
+    epochs:int = 100
     valid_size = 0.2
     test_size = 0.1
     pin_memory = True
@@ -32,8 +32,8 @@ class PretextParams:
 
 good_params_for_single_run = {
     "pretext": {
-        "batch_size": 64,
-        "adam": {"lr": 0.000128268}
+        "batch_size": 16,
+        "adam": {"lr": 0.000154582}
     }
 }
 
