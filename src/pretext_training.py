@@ -38,7 +38,7 @@ good_params_for_single_run = {
 }
 
 
-def train_pretext_tune_task(num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
+def train_pretext_tune_task(num_samples=10, max_num_epochs=100, gpus_per_trial=0.5):
     config = {
         "pretext": {
             "batch_size": tune.choice([8, 16, 32]),
