@@ -61,29 +61,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=2, gpus_per_trial=0.5
         log_to_file=True
     )
 
-    dfs = result.trial_dataframes
-    if len(dfs) > 0:
-        print(dfs)
-        print(list(dfs.values())[0])
-        if 'accuracy' in list(dfs.values())[0].columns:
-            print(dfs)
-            ax = None  # This plots everything on the same plot
-            for d in dfs.values():
-                if 'accuracy' in d.columns:
-                    ax = d.accuracy.plot(ax=ax, legend=False)
-            ax.set_xlabel("Epochs")
-            ax.set_ylabel("Accuracy")
-            plt.savefig('overview-accuracy-pretext.png')
-            plt.show()
-        if 'loss' in dfs.values()[0].columns:
-            ax = None  # This plots everything on the same plot
-            for d in dfs.values():
-                if 'loss' in d.columns:
-                    ax = d.loss.plot(ax=ax, legend=False)
-            ax.set_xlabel("Epochs")
-            ax.set_ylabel("loss")
-            plt.savefig('overview-loss-pretext.png')
-            plt.show()
+    utils.print_ray_overview(result, 'pretext')
 
     best_trial = result.get_best_trial("loss", "min", "last")
     print("Best trial config: {}".format(best_trial.config))

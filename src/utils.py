@@ -3,6 +3,7 @@ import numpy as np
 import random
 import tqdm
 from src.constants import Constants as c
+import matplotlib.pyplot as plt
 
 
 def y_to_torch(y_list, shape=None):
@@ -44,3 +45,28 @@ def pbar(iterable=None, **kwargs):
         return iterable
     else:
         return tqdm.tqdm(iterable=iterable, **kwargs)
+
+
+def print_ray_overview(result, prefix):
+    dfs = result.trial_dataframes
+    if len(dfs) > 0:
+        dfs_list = list(dfs.values())
+        first_data_frame = dfs_list[0]
+        if 'accuracy' in first_data_frame.columns:
+            ax = None  # This plots everything on the same plot
+            for d in dfs_list:
+                if 'accuracy' in d.columns:
+                    ax = d.accuracy.plot(ax=ax, legend=False)
+            ax.set_xlabel("Epochs")
+            ax.set_ylabel("Accuracy")
+            plt.savefig(f'overview-accuracy-{prefix}.png')
+            plt.show()
+        if 'loss' in first_data_frame.columns:
+            ax = None  # This plots everything on the same plot
+            for d in dfs_list:
+                if 'loss' in d.columns:
+                    ax = d.loss.plot(ax=ax, legend=False)
+            ax.set_xlabel("Epochs")
+            ax.set_ylabel("loss")
+            plt.savefig(f'overview-loss-{prefix}.png')
+            plt.show()
