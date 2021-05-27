@@ -26,7 +26,7 @@ class PretextParams:
     num_workers:int = 3
     epochs:int = 100
     valid_size = 0.2
-    test_size = 0.7
+    test_size = 0.1
     pin_memory = True
 
 
@@ -38,7 +38,7 @@ good_params_for_single_run = {
 }
 
 
-def train_pretext_tune_task(num_samples=10, max_num_epochs=2, gpus_per_trial=0.5):
+def train_pretext_tune_task(num_samples=10, max_num_epochs=100, gpus_per_trial=0.5):
     config = {
         "pretext": {
             "batch_size": tune.choice([8, 16, 32]),
