@@ -53,6 +53,7 @@ def print_ray_overview(result, prefix):
         dfs_list = list(dfs.values())
         first_data_frame = dfs_list[0]
         if 'accuracy' in first_data_frame.columns:
+            plt.figure()
             ax = None  # This plots everything on the same plot
             for d in dfs_list:
                 if 'accuracy' in d.columns:
@@ -62,6 +63,7 @@ def print_ray_overview(result, prefix):
             plt.savefig(f'overview-accuracy-{prefix}.png')
             plt.show()
         if 'loss' in first_data_frame.columns:
+            plt.figure()
             ax = None  # This plots everything on the same plot
             for d in dfs_list:
                 if 'loss' in d.columns:
