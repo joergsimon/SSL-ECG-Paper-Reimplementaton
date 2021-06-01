@@ -114,7 +114,7 @@ class EcgHead(nn.Module):
 
 class EcgAmigosHead(nn.Module):
     def __init__(self, n_out=1, drop_rate=0.6):
-        super(EcgHead, self).__init__()
+        super(EcgAmigosHead, self).__init__()
 
         self.head_1 = nn.Linear(128, 512)
         self.head_2 = nn.Linear(512, 512)
