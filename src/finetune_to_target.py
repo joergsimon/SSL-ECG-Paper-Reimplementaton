@@ -13,7 +13,7 @@ import src.data as dta
 import src.training.training_helper as th
 import src.utils as utils
 from src.constants import Constants as c
-from src.model import EcgNetwork
+from src.model import EcgNetwork, EcgAmigosHead
 
 path_to_src_model: str = c.model_base_path
 basepath_to_tuned_model: str = c.model_base_path + "tuned/"
@@ -68,8 +68,7 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
         best_trial.last_result["accuracy"]))
 
     dataset = dta.ds_to_constructor[target_dataset](dta.DataConstants.basepath)
-    does_not_matter = len(dta.AugmentationsPretextDataset.STD_AUG) + 1
-    best_trained_model = EcgNetwork(does_not_matter, dataset.target_size).emotion_head
+    best_trained_model = EcgAmigosHead(dataset.target_size)
 
     train_on_gpu = torch.cuda.is_available()
     if train_on_gpu:
@@ -99,7 +98,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
 
     does_not_matter = len(dta.AugmentationsPretextDataset.STD_AUG) + 1
     ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
-    model = ecg_net.emotion_head
+    model = EcgAmigosHead(dataset.target_size)
     model.debug_values = False
     embedder = ecg_net.cnn
     device = 'cuda' if train_on_gpu else 'cpu'

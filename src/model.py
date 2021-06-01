@@ -112,6 +112,46 @@ class EcgHead(nn.Module):
             print('head after activation', x.shape)
         return x
 
+class EcgAmigosHead(nn.Module):
+    def __init__(self, n_out=1, drop_rate=0.6):
+        super(EcgHead, self).__init__()
+
+        self.head_1 = nn.Linear(128, 512)
+        self.head_2 = nn.Linear(512, 512)
+        self.head_3 = nn.Linear(512, 512)
+        self.head_4 = nn.Linear(128, n_out)
+        self.dropout = nn.Dropout(drop_rate)
+        # we changed to BCEWithLogitLoss and CrossEntropyLoss, as they perform better, so the networks only output logits
+        self.out_activation = None  # torch.sigmoid if n_out == 1 else None
+
+        self.debug_dim = False
+        self.debug_values = False
+
+    def forward(self, x):
+        if self.debug_values:
+            print('input', x)
+        def ff_block(x, head):
+            x = head(x)
+            x = F.relu(x)
+            x = self.dropout(x)
+            return x
+        x = ff_block(x, self.head_1)
+        x = ff_block(x, self.head_2)
+        x = ff_block(x, self.head_3)
+        x = self.head_4(x)
+        x = self.dropout(x)
+        if self.debug_dim:
+            print('head before activation', x.shape)
+        if self.debug_values:
+            print('before last activation', x)
+        if self.out_activation is not None:
+            x = self.out_activation(x)
+        if self.debug_values:
+            print('after last activation', x)
+        if self.debug_dim:
+            print('head after activation', x.shape)
+        return x
+
 
 class EcgNetwork(nn.Module):
     def __init__(self, n_task_heads, n_emotions):
