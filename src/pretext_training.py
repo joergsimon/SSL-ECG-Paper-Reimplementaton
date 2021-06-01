@@ -94,7 +94,7 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'], weight_decay=0.0001)
-    optimizer = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.9)
+    schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.9)
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
     # should be restored.
@@ -112,10 +112,10 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
         criterion = criterion.cuda()
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
-    train_pretext(model, optimizer, criterion, train_on_gpu, p, use_tune=use_tune)
+    train_pretext(model, optimizer, schedulder, criterion, train_on_gpu, p, use_tune=use_tune)
 
 
-def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextParams, use_tune=True):
+def train_pretext(model, optimizer, schedulder, criterion, train_on_gpu: bool, p: PretextParams, use_tune=True):
 
     # we have convolutions here so allow the automatic optimization to ramp it up
     torch.backends.cudnn.benchmark = True
@@ -181,6 +181,7 @@ def train_pretext(model, optimizer, criterion, train_on_gpu: bool, p: PretextPar
 
                     task_loss.backward()
                     optimizer.step()
+                    schedulder.step()
 
                     total_loss = utils.assign(total_loss, task_loss)
                     total_accuracy = utils.assign(total_accuracy, accuracy)
