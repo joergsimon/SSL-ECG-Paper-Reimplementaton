@@ -93,7 +93,8 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
     p = PretextParams()
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
-    optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])
+    optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'], weight_decay=0.0001)
+    optimizer = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.9, last_epoch=1000)
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
     # should be restored.
