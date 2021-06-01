@@ -80,7 +80,7 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
     checkpoint_path = os.path.join(best_trial.checkpoint.value, "checkpoint")
 
     model_state, optimizer_state = torch.load(checkpoint_path)
-    best_trained_model.load_state_dict(model_state)
+    best_trained_model = utils.save_load_state_dict(best_trained_model, model_state)
 
     print('------------------------------------------------------------------------------')
     print('               Saving best model from hyperparam search                       ')
@@ -116,7 +116,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
     if checkpoint_dir:
         checkpoint = os.path.join(checkpoint_dir, "checkpoint")
         model_state, optimizer_state = torch.load(checkpoint)
-        model.load_state_dict(model_state)
+        model = utils.save_load_state_dict(model, model_state)
         optimizer.load_state_dict(optimizer_state)
 
     train_on_gpu = torch.cuda.is_available()

@@ -4,6 +4,7 @@ import random
 import tqdm
 from src.constants import Constants as c
 import matplotlib.pyplot as plt
+from collections import OrderedDict
 
 
 def y_to_torch(y_list, shape=None):
@@ -72,3 +73,30 @@ def print_ray_overview(result, prefix):
             ax.set_ylabel("loss")
             plt.savefig(f'overview-loss-{prefix}.png')
             plt.show()
+
+def save_load_state_dict(model, state_dict, device):
+    """
+    If DataParallel is used, this wrapps your model, and changes your state dict. In case you load the model without
+    the data parallel, or the other way around, save the model without data parallel and load it with, the load fails.
+    Also loading a model saved on pgu on cpu fails. This method encapsulates all these problems...
+
+    :param model: the nn.Module model to load
+    :param state_dict: the dictionary with the weights
+    :return: an model initialized with the values of the state dict
+    """
+    try:
+        model.load_state_dict(state_dict, map_location=torch.device(device))
+        return model
+    except RuntimeError as e:
+        print('loading failed, probably different wrapping on save and load.\nOriginal Error:')
+        print(e)
+        print('try to resolve...')
+        new_state_dict = OrderedDict()
+        for k, v in state_dict.items():
+            if k.starts_with('module'):
+                name = k[7:]  # remove `module.`
+            else:
+                name = f'module.{k}'
+            new_state_dict[name] = v
+        model.load_state_dict(new_state_dict, map_location=torch.device(device))
+        return model
