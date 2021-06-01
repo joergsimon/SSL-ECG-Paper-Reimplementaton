@@ -119,7 +119,7 @@ class EcgAmigosHead(nn.Module):
         self.head_1 = nn.Linear(128, 512)
         self.head_2 = nn.Linear(512, 512)
         self.head_3 = nn.Linear(512, 512)
-        self.head_4 = nn.Linear(128, n_out)
+        self.head_4 = nn.Linear(512, n_out)
         self.dropout = nn.Dropout(drop_rate)
         # we changed to BCEWithLogitLoss and CrossEntropyLoss, as they perform better, so the networks only output logits
         self.out_activation = None  # torch.sigmoid if n_out == 1 else None
