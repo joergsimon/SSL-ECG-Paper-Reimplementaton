@@ -85,7 +85,8 @@ class EcgHead(nn.Module):
         super(EcgHead, self).__init__()
 
         self.head_1 = nn.Linear(128, 128)
-        self.head_2 = nn.Linear(128, n_out)
+        self.head_2 = nn.Linear(128, 128)
+        self.head_3 = nn.Linear(128, n_out)
         self.dropout = nn.Dropout(drop_rate)
         # we changed to BCEWithLogitLoss and CrossEntropyLoss, as they perform better, so the networks only output logits
         self.out_activation = None  # torch.sigmoid if n_out == 1 else None
@@ -96,10 +97,14 @@ class EcgHead(nn.Module):
     def forward(self, x):
         if self.debug_values:
             print('input', x)
-        x = self.head_1(x)
-        x = F.leaky_relu(x)
-        x = self.dropout(x)
-        x = self.head_2(x)
+        def ff_block(x, head):
+            x = head(x)
+            x = F.leaky_relu(x)
+            x = self.dropout(x)
+            return x
+        x = ff_block(x, self.head_1)
+        x = ff_block(x, self.head_2)
+        x = self.head_3(x)
         if self.debug_dim:
             print('head before activation', x.shape)
         if self.debug_values:
