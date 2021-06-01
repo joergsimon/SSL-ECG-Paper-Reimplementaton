@@ -74,7 +74,7 @@ def print_ray_overview(result, prefix):
             plt.savefig(f'overview-loss-{prefix}.png')
             plt.show()
 
-def save_load_state_dict(model, state_dict, device):
+def save_load_state_dict(model, state_dict):
     """
     If DataParallel is used, this wrapps your model, and changes your state dict. In case you load the model without
     the data parallel, or the other way around, save the model without data parallel and load it with, the load fails.
@@ -85,7 +85,7 @@ def save_load_state_dict(model, state_dict, device):
     :return: an model initialized with the values of the state dict
     """
     try:
-        model.load_state_dict(state_dict, map_location=torch.device(device))
+        model.load_state_dict(state_dict)
         return model
     except RuntimeError as e:
         print('loading failed, probably different wrapping on save and load.\nOriginal Error:')
@@ -98,5 +98,5 @@ def save_load_state_dict(model, state_dict, device):
             else:
                 name = f'module.{k}'
             new_state_dict[name] = v
-        model.load_state_dict(new_state_dict, map_location=torch.device(device))
+        model.load_state_dict(new_state_dict)
         return model
