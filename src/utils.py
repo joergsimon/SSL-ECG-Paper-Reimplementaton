@@ -93,7 +93,7 @@ def save_load_state_dict(model, state_dict):
         print('try to resolve...')
         new_state_dict = OrderedDict()
         for k, v in state_dict.items():
-            if k.starts_with('module'):
+            if k.startswith('module'):
                 name = k[7:]  # remove `module.`
             else:
                 name = f'module.{k}'
