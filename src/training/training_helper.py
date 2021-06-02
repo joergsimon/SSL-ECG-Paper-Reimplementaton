@@ -5,7 +5,7 @@ from ray import tune
 import os.path
 
 
-def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_loss):
+def iterate_batches(loader, optimizer, schedulder, batch_size, train_on_gpu: bool, compute_loss):
     total_loss = None
     total_accuracy = None
     for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
@@ -18,6 +18,7 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
         loss, accuracy = compute_loss(data, labels)
         loss.backward()
         optimizer.step()
+        schedulder.step()
         total_loss = utils.assign(total_loss, loss / len(labels))
         total_accuracy = utils.assign(total_accuracy, accuracy)
     l = total_loss.item()
@@ -25,7 +26,7 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
     return l, a
 
 
-def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu: bool, use_tune:bool):
+def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, schedulder, compute_loss_and_accuracy, save_model, train_on_gpu: bool, use_tune:bool):
     valid_loss_min = np.Inf  # track change in validation loss
 
     for e in utils.pbar(range(epochs)):
@@ -40,7 +41,7 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # train the model #
         ###################
         model.train()
-        l, a = iterate_batches(train_loader, optimizer, batch_size, train_on_gpu, compute_loss_and_accuracy)
+        l, a = iterate_batches(train_loader, optimizer, schedulder, batch_size, train_on_gpu, compute_loss_and_accuracy)
         train_loss += l
         train_accuracy += a
 
@@ -48,7 +49,7 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # validate the model #
         ######################
         model.eval()
-        l, a = iterate_batches(valid_loader, optimizer, batch_size, train_on_gpu, compute_loss_and_accuracy)
+        l, a = iterate_batches(valid_loader, optimizer, schedulder, batch_size, train_on_gpu, compute_loss_and_accuracy)
         valid_loss += l
         valid_accuracy += a
 

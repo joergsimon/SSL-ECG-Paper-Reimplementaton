@@ -31,7 +31,8 @@ class TuningParams:
 good_params_for_single_run = {
     "finetune": {
         "batch_size": 16,
-        "adam": {"lr": 0.000128268}
+        "adam": {"lr": 0.000128268},
+        "scheduler": {"decay": 0.9}
     }
 }
 
@@ -40,7 +41,8 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
     config = {
         "finetune": {
             "batch_size": tune.choice([8, 16, 32, 64, 128]),
-            "adam": {"lr": tune.loguniform(6e-5, 1e-3)}
+            "adam": {"lr": tune.loguniform(1e-4, 1e-2)},
+            "scheduler": {"decay": tune.uniform(0.9, 0.99)}
         }
     }
 
@@ -109,6 +111,8 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
 
     dataset = dta.EmbeddingsDataset(embedder, dataset, True, dta.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['finetune']['adam']['lr'])
+    schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer,
+                                                        gamma=hyperparams_config['finetune']['scheduler']['decay'])
     criterion = nn.CrossEntropyLoss()
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
@@ -126,10 +130,10 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
         criterion = criterion.cuda()
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
-    finetune(model, optimizer, criterion, dataset, train_on_gpu, default_params, target_id, use_tune)
+    finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu, default_params, target_id, use_tune)
 
 
-def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: TuningParams, target_id, use_tune: bool):
+def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: bool, p: TuningParams, target_id, use_tune: bool):
 
     num_train = len(dataset)
     indices = list(range(num_train))
@@ -176,4 +180,4 @@ def finetune(model, optimizer, criterion, dataset, train_on_gpu: bool, p: Tuning
     def save_model():
         torch.save(model.state_dict(), f'{basepath_to_tuned_model}tuned_for_{target_id}.pt')
 
-    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, compute_loss_and_accuracy, save_model, train_on_gpu, use_tune)
+    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, schedulder, compute_loss_and_accuracy, save_model, train_on_gpu, use_tune)
