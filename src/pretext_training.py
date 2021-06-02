@@ -95,7 +95,7 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
     p = PretextParams()
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
-    optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'], weight_decay=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])#, weight_decay=0.0001)
     # schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=hyperparams_config['pretext']['scheduler']['decay'])
     schedulder = None
 
