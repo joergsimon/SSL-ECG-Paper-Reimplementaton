@@ -85,7 +85,7 @@ class EcgHead(nn.Module):
         super(EcgHead, self).__init__()
 
         self.head_1 = nn.Linear(128, 128)
-        self.head_2 = nn.Linear(128, 128)
+        # self.head_2 = nn.Linear(128, 128)
         self.head_3 = nn.Linear(128, n_out)
         self.dropout = nn.Dropout(drop_rate)
         # we changed to BCEWithLogitLoss and CrossEntropyLoss, as they perform better, so the networks only output logits
@@ -103,7 +103,7 @@ class EcgHead(nn.Module):
             x = self.dropout(x)
             return x
         x = ff_block(x, self.head_1)
-        x = ff_block(x, self.head_2)
+        # x = ff_block(x, self.head_2)
         x = self.head_3(x)
         if self.debug_dim:
             print('head before activation', x.shape)
