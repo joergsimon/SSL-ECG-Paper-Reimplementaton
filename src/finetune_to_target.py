@@ -106,11 +106,18 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
     device = 'cuda' if train_on_gpu else 'cpu'
     state_dict = torch.load(f'{path_to_src_model}model_embedding.pt', map_location=torch.device(device))
     embedder.load_state_dict(state_dict)
-    for p in embedder.parameters():
-        p.requires_grad = False
+    # for p in embedder.parameters():
+    #     p.requires_grad = False
 
     dataset = dta.EmbeddingsDataset(embedder, dataset, True, dta.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu)
-    optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['finetune']['adam']['lr'])
+    lr = hyperparams_config['finetune']['adam']['lr']
+
+
+
+    optimizer = torch.optim.Adam([
+        {'params': model.parameters()},
+        {'params': embedder.parameters(), 'lr': lr/10}
+    ], lr)
     schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer,
                                                         gamma=hyperparams_config['finetune']['scheduler']['decay'])
     criterion = nn.CrossEntropyLoss()
