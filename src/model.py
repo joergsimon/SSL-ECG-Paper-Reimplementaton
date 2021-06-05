@@ -141,7 +141,7 @@ class EcgAmigosHead(nn.Module):
             x = self.dropout(x)
             return x
         x = ff_block(x, self.head_1)
-        x = ff_block(x, self.head_2)
+        # x = ff_block(x, self.head_2)
         # x = ff_block(x, self.head_3)
         x = self.head_4(x)
         x = self.dropout(x)
