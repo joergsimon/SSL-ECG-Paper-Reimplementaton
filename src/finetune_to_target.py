@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from ray import tune
 from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader
@@ -100,7 +101,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
 
     does_not_matter = len(dta.AugmentationsPretextDataset.STD_AUG) + 1
     ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
-    model = EcgAmigosHead(dataset.target_size)
+    model = EcgAmigosHead(1)
     model.debug_values = False
     embedder = ecg_net.cnn
     device = 'cuda' if train_on_gpu else 'cpu'
@@ -120,7 +121,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
     ], lr)
     schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer,
                                                         gamma=hyperparams_config['finetune']['scheduler']['decay'])
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()#nn.CrossEntropyLoss()
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
     # should be restored.
@@ -168,7 +169,7 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
         # print(labels)
         valances = labels[:,0]
         valances[valances != valances] = 0 # remove nans
-        valances = valances.type(torch.LongTensor) # we quantisize
+        valances = (valances > 5.0).type(torch.int)#valances.type(torch.LongTensor) # we quantisize
         if train_on_gpu:
             valances = valances.cuda()
         if torch.any(valances < 0):
@@ -180,7 +181,7 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
         loss = criterion(l_prime, valances)
         #print('loss', loss)
 
-        predicted = torch.argmax(l_prime, dim=1)
+        predicted = F.sigmoid(l_prime) > 0.5 #torch.argmax(l_prime, dim=1)
         accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
         return loss, accuracy
 
