@@ -169,7 +169,7 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
         # print(labels)
         valances = labels[:,0]
         valances[valances != valances] = 0 # remove nans
-        valances = (valances > 5.0).type(torch.LongTensor)#valances.type(torch.LongTensor) # we quantisize
+        valances = (valances > 5.0).type(torch.FloatTensor)#valances.type(torch.LongTensor) # we quantisize
         if train_on_gpu:
             valances = valances.cuda()
         if torch.any(valances < 0):
@@ -181,7 +181,7 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
         loss = criterion(l_prime, valances)
         #print('loss', loss)
 
-        predicted = (F.sigmoid(l_prime) > 0.5).type(torch.LongTensor) #torch.argmax(l_prime, dim=1)
+        predicted = (F.sigmoid(l_prime) > 0.5).type(torch.FloatTensor) #torch.argmax(l_prime, dim=1)
         accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
         return loss, accuracy
 
