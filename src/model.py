@@ -118,7 +118,7 @@ class EcgHead(nn.Module):
         return x
 
 class EcgAmigosHead(nn.Module):
-    def __init__(self, n_out=1, drop_rate=0.6):
+    def __init__(self, n_out=1, drop_rate=0.75):
         super(EcgAmigosHead, self).__init__()
 
         self.head_1 = nn.Linear(128, 512)
@@ -141,8 +141,8 @@ class EcgAmigosHead(nn.Module):
             x = self.dropout(x)
             return x
         x = ff_block(x, self.head_1)
-        # x = ff_block(x, self.head_2)
-        # x = ff_block(x, self.head_3)
+        x = ff_block(x, self.head_2)
+        x = ff_block(x, self.head_3)
         x = self.head_4(x)
         x = self.dropout(x)
         if self.debug_dim:
