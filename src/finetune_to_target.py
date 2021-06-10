@@ -169,7 +169,7 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
         # print(labels)
         valances = labels[:,0]
         valances[valances != valances] = 0 # remove nans
-        valances = (valances > 5.0).type(torch.int)#valances.type(torch.LongTensor) # we quantisize
+        valances = (valances > 5.0).type(torch.IntTensor)#valances.type(torch.LongTensor) # we quantisize
         if train_on_gpu:
             valances = valances.cuda()
         if torch.any(valances < 0):
