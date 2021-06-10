@@ -181,7 +181,8 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
         loss = criterion(l_prime, valances)
         #print('loss', loss)
 
-        predicted = (F.sigmoid(l_prime) > 0.5).type(torch.FloatTensor) #torch.argmax(l_prime, dim=1)
+        predicted = (torch.sigmoid(l_prime) > 0.5).type(torch.FloatTensor) #torch.argmax(l_prime, dim=1)
+
         accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
         return loss, accuracy
 
