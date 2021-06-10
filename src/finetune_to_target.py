@@ -176,8 +176,8 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
             print(labels[0])
             print(valances)
             valances[valances < 0] = 0
-        #print('data_prime ', l_prime)
-        #print('valances', valances)
+        print('data_prime ', l_prime)
+        print('valances', valances)
         loss = criterion(l_prime, valances)
         #print('loss', loss)
 
