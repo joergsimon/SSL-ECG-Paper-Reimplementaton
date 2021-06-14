@@ -70,8 +70,8 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
     print("Best trial final validation accuracy: {}".format(
         best_trial.last_result["accuracy"]))
 
-    dataset = dta.ds_to_constructor[target_dataset](dta.DataConstants.basepath)
-    best_trained_model = EcgAmigosHead(dataset.target_size)
+    # dataset = dta.ds_to_constructor[target_dataset](dta.DataConstants.basepath)
+    best_trained_model = EcgAmigosHead(1) # = EcgAmigosHead(dataset.target_size)
 
     train_on_gpu = torch.cuda.is_available()
     if train_on_gpu:
@@ -185,6 +185,14 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
         if train_on_gpu:
             predicted = predicted.cuda()
         accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
+        print('\n-- predicted --')
+        print(predicted)
+        print('\n-- valances --')
+        print(valances)
+        print('\n')
+        print(f'sum of same: {torch.sum(predicted == valances)}')
+        print(f'shape of valance: {valances.shape}')
+        print(f'accuracy: {accuracy}')
         return loss, accuracy
 
     def save_model():
