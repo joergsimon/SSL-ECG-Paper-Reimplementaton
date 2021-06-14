@@ -118,7 +118,7 @@ class EcgHead(nn.Module):
         return x
 
 class EcgAmigosHead(nn.Module):
-    def __init__(self, n_out=1, drop_rate=0.75):
+    def __init__(self, n_out=1, drop_rate=0.85):
         super(EcgAmigosHead, self).__init__()
 
         self.head_1 = nn.Linear(128, 512)
@@ -144,7 +144,7 @@ class EcgAmigosHead(nn.Module):
         x = ff_block(x, self.head_2)
         x = ff_block(x, self.head_3)
         x = self.head_4(x)
-        x = self.dropout(x)
+        # x = self.dropout(x)
         if self.debug_dim:
             print('head before activation', x.shape)
         if self.debug_values:
