@@ -8,6 +8,7 @@ import os.path
 def iterate_batches(loader, optimizer, schedulder, batch_size, train_on_gpu: bool, compute_loss):
     total_loss = None
     total_accuracy = None
+    total_accuracy_list = []
     for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
         if data.shape[0] != batch_size:
             #print('skipping too small batch')
@@ -19,8 +20,13 @@ def iterate_batches(loader, optimizer, schedulder, batch_size, train_on_gpu: boo
         loss.backward()
         optimizer.step()
         schedulder.step()
+        total_accuracy_list.append(accuracy.item())
         total_loss = utils.assign(total_loss, loss / len(labels))
         total_accuracy = utils.assign(total_accuracy, accuracy)
+    print(f'all accuracies: {total_accuracy_list}')
+    print(f'list based accuracy: {np.mean(np.array(total_accuracy_list))}')
+    print(f'sum of accuracy: {total_accuracy.item()}')
+    print(f'sum of accuracy normalised by loader length: {total_accuracy.item() / len(loader)}')
     l = total_loss.item()
     a = total_accuracy.item()
     return l, a
