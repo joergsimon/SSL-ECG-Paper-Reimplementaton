@@ -5,9 +5,9 @@ from ray import tune
 import os.path
 
 
-def iterate_batches(loader, optimizer, schedulder, batch_size, train_on_gpu: bool, compute_loss):
     total_loss = None
     total_accuracy = None
+def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_loss):
     total_accuracy_list = []
     for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
         if data.shape[0] != batch_size:
@@ -19,7 +19,6 @@ def iterate_batches(loader, optimizer, schedulder, batch_size, train_on_gpu: boo
         loss, accuracy = compute_loss(data, labels)
         loss.backward()
         optimizer.step()
-        schedulder.step()
         total_accuracy_list.append(accuracy.item())
         total_loss = utils.assign(total_loss, loss / len(labels))
         total_accuracy = utils.assign(total_accuracy, accuracy)
@@ -37,6 +36,9 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
 
     for e in utils.pbar(range(epochs)):
 
+        for param_group in optimizer.param_groups:
+            print(f'lr for epoch {e} ', param_group['lr'])
+
         train_loss = 0.0
         valid_loss = 0.0
 
@@ -47,7 +49,7 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # train the model #
         ###################
         model.train()
-        l, a = iterate_batches(train_loader, optimizer, schedulder, batch_size, train_on_gpu, compute_loss_and_accuracy)
+        l, a = iterate_batches(train_loader, optimizer, batch_size, train_on_gpu, compute_loss_and_accuracy)
         train_loss += l
         train_accuracy += a
 
@@ -55,7 +57,7 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # validate the model #
         ######################
         model.eval()
-        l, a = iterate_batches(valid_loader, optimizer, schedulder, batch_size, train_on_gpu, compute_loss_and_accuracy)
+        l, a = iterate_batches(valid_loader, optimizer, batch_size, train_on_gpu, compute_loss_and_accuracy)
         valid_loss += l
         valid_accuracy += a
 
@@ -65,6 +67,8 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
 
         train_accuracy = train_accuracy / len(train_loader)
         valid_accuracy = valid_accuracy / len(train_loader)
+        if schedulder is not None:
+            schedulder.step()
 
         # print training/validation statistics
         print('Epoch: {} \tTraining Loss: {:.6f} \tValidation Loss: {:.6f}\n\t\tTraining Accuracy: {:.3f} \tValidation Accuracy: {:.3f}'.format(
