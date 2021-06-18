@@ -10,7 +10,7 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
     total_accuracy = 0.0
     total_accuracy_list = []
     for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
-        labels = torch.stack(labels, dim=1).float()
+        # labels = torch.stack(labels, dim=1).float()
         if data.shape[0] != batch_size:
             #print('skipping too small batch')
             continue  # if not full batch, just continue
