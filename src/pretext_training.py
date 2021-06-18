@@ -42,8 +42,8 @@ good_params_for_single_run = {
 def train_pretext_tune_task(num_samples=10, max_num_epochs=100, gpus_per_trial=0.5):
     config = {
         "pretext": {
-            "batch_size": tune.choice([8, 16, 32]),
-            "adam": {"lr": tune.loguniform(9e-5, 2e-3)},
+            "batch_size": tune.choice([8, 16, 32, 64, 128]),
+            "adam": {"lr": tune.loguniform(9e-5, 2e-2)},
             "scheduler": {"decay": tune.uniform(0.9, 0.99)}
         }
     }

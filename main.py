@@ -8,7 +8,7 @@ from src.constants import Constants as c
 import src.augmentations as aug
 
 run_tests = False
-run_pretrain_hyperparams = False
+run_pretrain_hyperparams = True
 pre_train_single_augmentation = False
 run_finetune_hyperparams = True
 pre_train_single = False
@@ -18,7 +18,7 @@ run_example = False
 if __name__ == '__main__':
     if run_pretrain_hyperparams:
         c.use_ray = True
-        pt.train_pretext_tune_task(num_samples=10)
+        pt.train_pretext_tune_task(num_samples=20)
     if pre_train_single_augmentation:
         c.use_ray = False
         ptoc.train_pretext_full_config(pt.good_params_for_single_run, aug.AugmentationTypes.TIME_WRAP, use_tune=False)
