@@ -57,7 +57,7 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
     config = {
         "finetune": {
             "batch_size": tune.choice([8, 16, 32, 64, 128]),
-            "adam": {"lr": tune.loguniform(1e-4, 1e-2)},
+            "adam": {"lr": tune.loguniform(5e-4, 1e-1)},
             "scheduler": {"decay": tune.uniform(0.9, 0.99)}
         }
     }
