@@ -96,8 +96,8 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])#, weight_decay=0.0001)
-    # schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=hyperparams_config['pretext']['scheduler']['decay'])
-    schedulder = None
+    schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=hyperparams_config['pretext']['scheduler']['decay'])
+    # schedulder = None
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
     # should be restored.
@@ -148,6 +148,9 @@ def train_pretext(model, optimizer, schedulder, criterion, train_on_gpu: bool, p
 
     for e in utils.pbar(range(p.epochs)):
 
+        for param_group in optimizer.param_groups:
+            print(f'lr for epoch {e} ', param_group['lr'])
+
         train_loss = 0.0
         valid_loss = 0.0
 
@@ -179,7 +182,7 @@ def train_pretext(model, optimizer, schedulder, criterion, train_on_gpu: bool, p
                     tasks_out = tasks_out.squeeze().T
                     task_loss = criterion(tasks_out, lbls)
 
-                    predicted = torch.argmax(tasks_out, dim=1)
+                    predicted = torch.argmax(tasks_out, dim=1).detach()
                     accuracy = torch.sum(predicted == aug_labels).type(torch.float) / aug_labels.shape[0]
 
                     task_loss.backward()
@@ -216,6 +219,9 @@ def train_pretext(model, optimizer, schedulder, criterion, train_on_gpu: bool, p
         ######################
         model.eval()
         iterate_batches(valid_loader, 'valid')
+
+        if schedulder is not None:
+            schedulder.step()
 
         # calculate average losses
         train_loss = train_loss / len(train_loader)
