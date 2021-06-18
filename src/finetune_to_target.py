@@ -187,7 +187,7 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
     def compute_loss_and_accuracy(data, labels):
         # latent = cnn(data).squeeze()
         # y_prime = head(latent)
-        y_prime = model(data)
+        y_prime = model(data).squeeze()
         y = binary_labels(labels)
         if train_on_gpu:
             y = y.cuda()
