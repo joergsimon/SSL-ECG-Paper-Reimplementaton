@@ -125,6 +125,14 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
     # for p in embedder.parameters():
     #     p.requires_grad = False
 
+    def check_zero_grad(gradient):
+        data = gradient.data.clone().detach()
+        debug_is_zero = torch.sum(data) == 0
+        if debug_is_zero:
+            print(gradient)
+
+    embedder.conv_1.weight.register_hook(check_zero_grad)
+
     dataset = dta.EmbeddingsDataset(embedder, dataset, True, dta.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu)
     lr = hyperparams_config['finetune']['adam']['lr']
 
