@@ -5,11 +5,12 @@ from ray import tune
 import os.path
 
 
-    total_loss = None
-    total_accuracy = None
 def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_loss):
+    total_loss = 0.0
+    total_accuracy = 0.0
     total_accuracy_list = []
     for i_batch, (data, labels) in enumerate(utils.pbar(loader, leave=False)):
+        labels = torch.stack(labels, dim=1).float()
         if data.shape[0] != batch_size:
             #print('skipping too small batch')
             continue  # if not full batch, just continue
@@ -20,15 +21,13 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
         loss.backward()
         optimizer.step()
         total_accuracy_list.append(accuracy.item())
-        total_loss = utils.assign(total_loss, loss / len(labels))
-        total_accuracy = utils.assign(total_accuracy, accuracy)
+        total_loss += loss.item()
+        total_accuracy += accuracy.item()
     # print(f'all accuracies: {total_accuracy_list}')
     # print(f'list based accuracy: {np.mean(np.array(total_accuracy_list))}')
     # print(f'sum of accuracy: {total_accuracy.item()}')
     # print(f'sum of accuracy normalised by loader length: {total_accuracy.item() / len(loader)}')
-    l = total_loss.item()
-    a = total_accuracy.item()
-    return l, a
+    return total_loss, total_accuracy
 
 
 def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, schedulder, compute_loss_and_accuracy, save_model, train_on_gpu: bool, use_tune:bool):
@@ -66,7 +65,8 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         valid_loss = valid_loss / len(valid_loader)
 
         train_accuracy = train_accuracy / len(train_loader)
-        valid_accuracy = valid_accuracy / len(train_loader)
+        valid_accuracy = valid_accuracy / len(valid_loader)
+        
         if schedulder is not None:
             schedulder.step()
 
