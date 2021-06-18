@@ -38,6 +38,21 @@ good_params_for_single_run = {
 }
 
 
+def rm_nan(labels, column):
+    col = labels[:, column]
+    col[col != col] = 0.0  # remove nans
+    return col
+
+
+def binary_labels(labels):
+    # most old fashiond literature just does a high/low valance/arousal classification (so 4 classes)
+    # let's first also do this old fashioned task
+    labels[:, 0] = rm_nan(labels, 0)
+    labels[:, 1] = rm_nan(labels, 1)
+    labels = (labels > 5.0).type(torch.FloatTensor)
+    return labels
+
+
 def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_samples=10, max_num_epochs=200, gpus_per_trial=0.5):
     config = {
         "finetune": {
@@ -71,7 +86,7 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
         best_trial.last_result["accuracy"]))
 
     # dataset = dta.ds_to_constructor[target_dataset](dta.DataConstants.basepath)
-    best_trained_model = EcgAmigosHead(1) # = EcgAmigosHead(dataset.target_size)
+    best_trained_model = EcgAmigosHead(2) # = EcgAmigosHead(dataset.target_size)
 
     train_on_gpu = torch.cuda.is_available()
     if train_on_gpu:
@@ -101,7 +116,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
 
     does_not_matter = len(dta.AugmentationsPretextDataset.STD_AUG) + 1
     ecg_net = EcgNetwork(does_not_matter, dataset.target_size)
-    model = EcgAmigosHead(1)
+    model = EcgAmigosHead(2)
     model.debug_values = False
     embedder = ecg_net.cnn
     device = 'cuda' if train_on_gpu else 'cpu'
@@ -162,37 +177,22 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
     print(model)
 
     def compute_loss_and_accuracy(data, labels):
-        l_prime = model(data).squeeze()
-        # for now, we just try to predict valance
-        # print(labels.shape)
-        # print("ooo")
-        # print(labels)
-        valances = labels[:,0]
-        valances[valances != valances] = 0 # remove nans
-        valances = (valances > 5.0).type(torch.FloatTensor)#valances.type(torch.LongTensor) # we quantisize
+        # latent = cnn(data).squeeze()
+        # y_prime = head(latent)
+        y_prime = model(data)
+        y = binary_labels(labels)
         if train_on_gpu:
-            valances = valances.cuda()
-        if torch.any(valances < 0):
-            print(labels[0])
-            print(valances)
-            valances[valances < 0] = 0
-        # print('data_prime ', l_prime)
-        # print('valances', valances)
-        loss = criterion(l_prime, valances)
-        #print('loss', loss)
+            y = y.cuda()
+        loss = criterion(y_prime, y)
+        # print('loss', loss)
 
-        predicted = (torch.sigmoid(l_prime) > 0.5).type(torch.FloatTensor) #torch.argmax(l_prime, dim=1)
+        y_sigm = torch.sigmoid(y_prime).detach()
+        predicted = (y_sigm > 0.5).type(torch.FloatTensor)  # torch.argmax(l_prime, dim=1)
         if train_on_gpu:
             predicted = predicted.cuda()
-        accuracy = torch.sum(predicted == valances).type(torch.float)/valances.shape[0]
-        # print('\n-- predicted --')
-        # print(predicted)
-        # print('\n-- valances --')
-        # print(valances)
-        # print('\n')
-        # print(f'sum of same: {torch.sum(predicted == valances)}')
-        # print(f'shape of valance: {valances.shape}')
-        # print(f'accuracy: {accuracy}')
+        same = predicted == y
+        same_sum = torch.sum(same).type(torch.float)
+        accuracy = same_sum / torch.numel(same)
         return loss, accuracy
 
     def save_model():
