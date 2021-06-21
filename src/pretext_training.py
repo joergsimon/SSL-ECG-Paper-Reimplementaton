@@ -44,7 +44,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=150, gpus_per_trial=0
         "pretext": {
             "batch_size": tune.choice([8, 16, 32, 64, 128]),
             "adam": {"lr": tune.loguniform(9e-5, 2e-2)},
-            "scheduler": {"decay": tune.choice([tune.uniform(0.9, 0.99), None])}
+            "scheduler": {"decay": tune.choice([tune.loguniform(0.99, 0.90), None])}
         }
     }
 
