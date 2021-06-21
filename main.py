@@ -29,9 +29,7 @@ if __name__ == '__main__':
     parser.add_argument("-rex", "--run-example-classification", action="store_true",
                         help="runs one classification as example how to use the system")
     args = parser.parse_args()
-
-    if args.verbosity:
-        print("verbosity turned on")
+    
     if not args.skip_pretext_hyperparams:
         c.use_ray = True
         pt.train_pretext_tune_task(num_samples=args.num_pretext_experiments)
