@@ -39,12 +39,12 @@ good_params_for_single_run = {
 }
 
 
-def train_pretext_tune_task(num_samples=10, max_num_epochs=100, gpus_per_trial=0.5):
+def train_pretext_tune_task(num_samples=10, max_num_epochs=150, gpus_per_trial=0.5):
     config = {
         "pretext": {
             "batch_size": tune.choice([8, 16, 32, 64, 128]),
             "adam": {"lr": tune.loguniform(9e-5, 2e-2)},
-            "scheduler": {"decay": tune.uniform(0.9, 0.99)}
+            "scheduler": {"decay": tune.choice([tune.uniform(0.9, 0.99), None])}
         }
     }
 
@@ -54,7 +54,7 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=100, gpus_per_trial=0
         reduction_factor=2)
     result = tune.run(
         tune.with_parameters(train_pretext_full_config),
-        resources_per_trial={"cpu": 3, "gpu": gpus_per_trial},
+        resources_per_trial={"cpu": 4, "gpu": gpus_per_trial},
         config=config,
         metric="loss",
         mode="min",
@@ -96,8 +96,10 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])#, weight_decay=0.0001)
-    schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=hyperparams_config['pretext']['scheduler']['decay'])
-    # schedulder = None
+    schedulder = None
+    if hyperparams_config['pretext']['scheduler']['decay'] is not None:
+        schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer,
+                                                            gamma=hyperparams_config['pretext']['scheduler']['decay'])
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
     # should be restored.
