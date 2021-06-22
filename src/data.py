@@ -142,7 +142,8 @@ class EmbeddingsDataset(Dataset):
 
     path_to_cache = c.cache_base_path
     
-    def __init__(self, embedding_network, base_dataset, should_cache, path_to_cache, chache_identifier, train_on_gpu: bool):
+    def __init__(self, embedding_network, base_dataset, should_cache, path_to_cache, chache_identifier,
+                 train_on_gpu: bool):
         super(EmbeddingsDataset, self).__init__()
         self.embedding_network = embedding_network
         self.base_dataset = base_dataset
