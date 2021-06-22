@@ -29,7 +29,7 @@ if __name__ == '__main__':
     parser.add_argument("-rex", "--run-example-classification", action="store_true",
                         help="runs one classification as example how to use the system")
     args = parser.parse_args()
-    
+
     if not args.skip_pretext_hyperparams:
         c.use_ray = True
         pt.train_pretext_tune_task(num_samples=args.num_pretext_experiments)
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     if args.run_single_pretraining:
         c.use_ray = False
         pt.train_pretext_full_config(pt.good_params_for_single_run, use_tune=False)
-    if args.skip_finetune_hyperparams:
+    if not args.skip_finetune_hyperparams:
         c.use_ray = True
         ftt.train_finetune_tune_task(data.DataSets.AMIGOS, 'test_123', num_samples=args.num_finetune_experiments)
     c.use_ray = False
