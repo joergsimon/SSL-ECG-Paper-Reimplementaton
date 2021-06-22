@@ -133,7 +133,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
 
     embedder.conv_1.weight.register_hook(check_zero_grad)
 
-    dataset = dta.EmbeddingsDataset(embedder, dataset, True, dta.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu)
+    dataset = dta.EmbeddingsDataset(embedder, dataset, False, dta.EmbeddingsDataset.path_to_cache, target_id,  train_on_gpu) # set should cache to false so we see an effect on finetuning
     lr = hyperparams_config['finetune']['adam']['lr']
 
 
