@@ -5,7 +5,7 @@ from ray import tune
 import os.path
 
 
-def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_loss):
+def iterate_batches(loader, optimizer, scaler, batch_size, train_on_gpu: bool, compute_loss):
     total_loss = 0.0
     total_accuracy = 0.0
     total_accuracy_list = []
@@ -18,8 +18,13 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
             data, labels = data.cuda(), labels.cuda()
         optimizer.zero_grad()
         loss, accuracy = compute_loss(data, labels)
-        loss.backward()
-        optimizer.step()
+        if scaler is not None:
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            loss.backward()
+            optimizer.step()
         total_accuracy_list.append(accuracy.item())
         total_loss += loss.item()
         total_accuracy += accuracy.item()
@@ -30,8 +35,12 @@ def iterate_batches(loader, optimizer, batch_size, train_on_gpu: bool, compute_l
     return total_loss, total_accuracy
 
 
-def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, schedulder, compute_loss_and_accuracy, save_model, train_on_gpu: bool, use_tune:bool):
+def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimizer, schedulder, use_scaler, compute_loss_and_accuracy, save_model, train_on_gpu: bool, use_tune:bool):
     valid_loss_min = np.Inf  # track change in validation loss
+
+    scaler = None
+    if use_scaler:
+        scaler = torch.cuda.amp.GradScaler()
 
     for e in utils.pbar(range(epochs)):
 
@@ -48,7 +57,7 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # train the model #
         ###################
         model.train()
-        l, a = iterate_batches(train_loader, optimizer, batch_size, train_on_gpu, compute_loss_and_accuracy)
+        l, a = iterate_batches(train_loader, optimizer, scaler, batch_size, train_on_gpu, compute_loss_and_accuracy)
         train_loss += l
         train_accuracy += a
 
@@ -56,7 +65,7 @@ def std_train_loop(epochs, batch_size, train_loader, valid_loader, model, optimi
         # validate the model #
         ######################
         model.eval()
-        l, a = iterate_batches(valid_loader, optimizer, batch_size, train_on_gpu, compute_loss_and_accuracy)
+        l, a = iterate_batches(valid_loader, optimizer, scaler, batch_size, train_on_gpu, compute_loss_and_accuracy)
         valid_loss += l
         valid_accuracy += a
 

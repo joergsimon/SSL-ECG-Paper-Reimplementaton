@@ -206,4 +206,5 @@ def finetune(model, optimizer, schedulder, criterion, dataset, train_on_gpu: boo
     def save_model():
         torch.save(model.state_dict(), f'{basepath_to_tuned_model}tuned_for_{target_id}.pt')
 
-    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, schedulder, compute_loss_and_accuracy, save_model, train_on_gpu, use_tune)
+    use_scaler = True
+    th.std_train_loop(p.epochs, p.batch_size, train_loader, valid_loader, model, optimizer, schedulder, use_scaler, compute_loss_and_accuracy, save_model, train_on_gpu, use_tune)
