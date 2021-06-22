@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 from ray import tune
 from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader
@@ -38,6 +39,41 @@ good_params_for_single_run = {
 }
 
 
+def get_cosine_with_hard_restarts_schedule_with_warmup(
+    optimizer: torch.optim.Optimizer, num_warmup_steps: int, num_training_steps: int, num_cycles: int = 1, last_epoch: int = -1
+):
+    """
+    Create a schedule with a learning rate that decreases following the values of the cosine function between the
+    initial lr set in the optimizer to 0, with several hard restarts, after a warmup period during which it increases
+    linearly between 0 and the initial lr set in the optimizer.
+
+    Args:
+        optimizer (:class:`~torch.optim.Optimizer`):
+            The optimizer for which to schedule the learning rate.
+        num_warmup_steps (:obj:`int`):
+            The number of steps for the warmup phase.
+        num_training_steps (:obj:`int`):
+            The total number of training steps.
+        num_cycles (:obj:`int`, `optional`, defaults to 1):
+            The number of hard restarts to use.
+        last_epoch (:obj:`int`, `optional`, defaults to -1):
+            The index of the last epoch when resuming training.
+
+    Return:
+        :obj:`torch.optim.lr_scheduler.LambdaLR` with the appropriate schedule.
+    """
+
+    def lr_lambda(current_step):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1, num_warmup_steps))
+        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+        if progress >= 1.0:
+            return 0.0
+        return max(0.0, 0.5 * (1.0 + math.cos(math.pi * ((float(num_cycles) * progress) % 1.0))))
+
+    return torch.optim.LambdaLR(optimizer, lr_lambda, last_epoch)
+
+
 def rm_nan(labels, column):
     col = labels[:, column]
     col[col != col] = 0.0  # remove nans
@@ -58,7 +94,12 @@ def train_finetune_tune_task(target_dataset: dta.DataSets, target_id, num_sample
         "finetune": {
             "batch_size": tune.choice([8, 16, 32, 64, 128]),
             "adam": {"lr": tune.loguniform(5e-4, 1e-1)},
-            "scheduler": {"decay": tune.loguniform(0.99, 0.90)}
+            "scheduler": {
+                "type": tune.choice(['decay', 'cosine_w_restarts', 'none']),
+                "decay": tune.loguniform(0.99, 0.90),
+                "warmup": tune.randint(5, 15),
+                "cycles": tune.randint(1, 4)
+            }
         }
     }
 
@@ -142,8 +183,18 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
         {'params': model.parameters()},
         {'params': embedder.parameters(), 'lr': lr/10}
     ], lr)
-    schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer,
-                                                        gamma=hyperparams_config['finetune']['scheduler']['decay'])
+    scheduler_info = hyperparams_config['finetune']['scheduler']
+    if scheduler_info['type'] == 'none':
+        schedulder = None
+    elif scheduler_info['type'] == 'decay':
+        schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer,
+                                                            gamma=scheduler_info['decay'])
+    elif scheduler_info['type'] == 'cosine_w_restarts':
+        warmup = scheduler_info['warmup']
+        training = default_params.epochs - warmup
+        cycles = scheduler_info['cycles']
+        schedulder = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer, warmup, training, cycles)
+        
     criterion = nn.BCEWithLogitsLoss()#nn.CrossEntropyLoss()
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
