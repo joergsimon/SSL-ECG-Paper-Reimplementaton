@@ -13,6 +13,7 @@ import src.datasets.amigos as amigos
 import src.datasets.dataset_utils as du
 import src.datasets.dreamer as dreamer
 import src.datasets.wesad as wesad
+import src.datasets.swell as swell
 import src.utils as utils
 from src.constants import Constants as c
 
@@ -26,12 +27,14 @@ class DataSets(Enum):
     AMIGOS = 0
     DREAMER = 1
     WESAD = 2
+    SWELL = 3
 
 
 ds_to_constructor = {
     DataSets.AMIGOS: amigos.ECGAmigosCachedWindowsDataset,
     DataSets.DREAMER: dreamer.ECGDreamerCachedWindowsDataset,
-    DataSets.WESAD: wesad.ECGWesadCachedWindowsDataset
+    DataSets.WESAD: wesad.ECGWesadCachedWindowsDataset,
+    DataSets.SWELL: swell.ECGSwellCachedWindowsDataset
 }
 
 
