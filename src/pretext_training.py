@@ -187,9 +187,9 @@ def train_pretext(model, optimizer, schedulder, criterion, train_on_gpu: bool, p
                     predicted = torch.argmax(tasks_out, dim=1).detach()
                     accuracy = torch.sum(predicted == aug_labels).type(torch.float) / aug_labels.shape[0]
 
-                    task_loss.backward()
-                    optimizer.step()
-                    # schedulder.step()
+                    if loss_type == 'train':
+                        task_loss.backward()
+                        optimizer.step()
 
                     total_loss = utils.assign(total_loss, task_loss)
                     total_accuracy = utils.assign(total_accuracy, accuracy)
@@ -220,7 +220,8 @@ def train_pretext(model, optimizer, schedulder, criterion, train_on_gpu: bool, p
         # validate the model #
         ######################
         model.eval()
-        iterate_batches(valid_loader, 'valid')
+        with torch.no_grad():
+            iterate_batches(valid_loader, 'valid')
 
         if schedulder is not None:
             schedulder.step()

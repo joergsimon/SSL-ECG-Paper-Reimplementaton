@@ -194,7 +194,7 @@ def finetune_to_target_full_config(hyperparams_config, checkpoint_dir=None, targ
         training = default_params.epochs - warmup
         cycles = scheduler_info['cycles']
         schedulder = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer, warmup, training, cycles)
-        
+
     criterion = nn.BCEWithLogitsLoss()#nn.CrossEntropyLoss()
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
