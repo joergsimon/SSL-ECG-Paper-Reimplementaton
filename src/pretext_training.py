@@ -102,7 +102,7 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
     model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])#, weight_decay=0.0001)
 
-    scheduler_info = hyperparams_config['finetune']['scheduler']
+    scheduler_info = hyperparams_config['pretext']['scheduler']
     if scheduler_info['type'] == 'none':
         schedulder = None
     elif scheduler_info['type'] == 'decay':
