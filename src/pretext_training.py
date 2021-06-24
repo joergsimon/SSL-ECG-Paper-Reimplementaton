@@ -44,7 +44,12 @@ def train_pretext_tune_task(num_samples=10, max_num_epochs=150, gpus_per_trial=0
         "pretext": {
             "batch_size": tune.choice([8, 16, 32, 64, 128]),
             "adam": {"lr": tune.loguniform(9e-5, 2e-2)},
-            "scheduler": {"decay": tune.choice([tune.loguniform(0.99, 0.90), None])}
+            "scheduler": {
+                "type": tune.choice(['decay', 'cosine_w_restarts', 'none']),
+                "decay": tune.loguniform(0.99, 0.90),
+                "warmup": tune.randint(5, 15),
+                "cycles": tune.randint(1, 4)
+            }
         }
     }
 
@@ -96,10 +101,18 @@ def train_pretext_full_config(hyperparams_config, checkpoint_dir=None, use_tune=
     p.batch_size = hyperparams_config['pretext']['batch_size']
     model = EcgNetwork(len(dta.AugmentationsPretextDataset.STD_AUG) + 1, 5)
     optimizer = torch.optim.Adam(model.parameters(), hyperparams_config['pretext']['adam']['lr'])#, weight_decay=0.0001)
-    schedulder = None
-    if hyperparams_config['pretext']['scheduler']['decay'] is not None:
+
+    scheduler_info = hyperparams_config['finetune']['scheduler']
+    if scheduler_info['type'] == 'none':
+        schedulder = None
+    elif scheduler_info['type'] == 'decay':
         schedulder = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer,
-                                                            gamma=hyperparams_config['pretext']['scheduler']['decay'])
+                                                            gamma=scheduler_info['decay'])
+    elif scheduler_info['type'] == 'cosine_w_restarts':
+        warmup = scheduler_info['warmup']
+        training = p.epochs - warmup
+        cycles = scheduler_info['cycles']
+        schedulder = utils.get_cosine_with_hard_restarts_schedule_with_warmup(optimizer, warmup, training, cycles)
 
     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
     # should be restored.
