@@ -1,5 +1,8 @@
 import glob
+import os
+import os.path
 import pickle
+from collections import defaultdict
 
 import cv2
 import numpy as np
@@ -20,11 +23,12 @@ class SwellConstants:
 
 def iterate_swell_persons(basepath: str):
     files = glob.glob(basepath + SwellConstants.glob_to_pickled_data)
-    person_to_files = {}
-    for i in files:
-        p_name = i[:i.find('_')]
-        person_to_files[p_name] = person_to_files.get(p_name, []).append(i)
-    for p in person_to_files.keys():
+    person_to_files = defaultdict(list)
+    fnames = [os.path.basename(f) for f in files]
+    for i, f in zip(fnames, files):
+        p_name = i[:i.find('_')].upper()
+        person_to_files[p_name].append(f)
+    for p in tqdm.tqdm(person_to_files.keys()):
         yield p, person_to_files[p]
 
 def load_ecg_windows(basepath: str):
@@ -39,32 +43,10 @@ def load_ecg_windows(basepath: str):
 
     label = pd.ExcelFile(basepath + SwellConstants.labels_file, engine='openpyxl')
     label_sheet_names = label.sheet_names
-    labels = None
-    for i in tqdm.tqdm(range(len(label_sheet_names))):
-        participant_labellings = label.parse(label_sheet_names[i])
-        if labels is None:
-            labels = participant_labellings
-        else:
-            labels = labels.append(participant_labellings, ignore_index=True, sort=False)
+    labels = label.parse(label_sheet_names[0]) # we only need sheet one
 
     swell_labels = labels.drop_duplicates(subset=['PP', 'Blok'], keep='last')
     swell_labels = swell_labels.reset_index(drop=True)
-    # counter = 0
-    #
-    # # adding csv names into labels
-    # swell_labels['filename'] = 'default'
-    # files = glob.glob(basepath + SwellConstants.glob_to_pickled_data)
-    # for i in files:
-    #     start = i.find('_')
-    #     end = i.rfind('c')
-    #     person_id = i[:start].upper()
-    #     cond_id = i[end + 1:-4]
-    #     if cond_id == 'ont':
-    #         cond_id = i[end - 2:end - 1]
-    #     condition = (swell_labels['PP'] == person_id) & (swell_labels['Blok'] == int(cond_id))
-    #     index = np.where(condition)[0]
-    #     if len(index) != 0:
-    #         swell_labels['filename'].iloc[index[0]] = i
 
     windows = []
     window_labels = []
@@ -80,7 +62,7 @@ def load_ecg_windows(basepath: str):
 
         for s_idx, signal in enumerate(all_ecg_d):
             ecg = du.normalize(signal, data_mean, data_std)
-            w = make_windows(ecg)
+            w = make_windows([ecg])
             windows += w
 
             label_set = swell_labels[(swell_labels['PP'] == p_id) & (swell_labels['Blok'] == s_idx+1)]
